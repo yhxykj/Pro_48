@@ -1,9 +1,4 @@
-//
-//  ChatViewController.swift
-//  Sockes
-//
-//  Created by 上包666 on 2026/6/1.
-//
+
 
 import UIKit
 
@@ -26,6 +21,7 @@ final class ChatViewController: UIViewController {
     ]
 
     private let tableView = UITableView(frame: .zero, style: .plain)
+    private let inputBar = UIView()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -33,6 +29,12 @@ final class ChatViewController: UIViewController {
         setupHeader()
         setupTableView()
         setupInputBar()
+        setupKeyboardDismiss()
+        setupKeyboardObserver()
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
 
     private func setupHeader() {
@@ -74,16 +76,16 @@ final class ChatViewController: UIViewController {
             headerView.heightAnchor.constraint(equalToConstant: 225),
 
             backButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 13),
-            backButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 6),
+            backButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 3),
             backButton.widthAnchor.constraint(equalToConstant: 44),
             backButton.heightAnchor.constraint(equalToConstant: 44),
 
             nameLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            nameLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 6),
+            nameLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 3),
             nameLabel.heightAnchor.constraint(equalToConstant: 44),
 
             tagStack.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            tagStack.topAnchor.constraint(equalTo: nameLabel.bottomAnchor, constant: 30)
+            tagStack.topAnchor.constraint(equalTo: nameLabel.bottomAnchor, constant: 12)
         ])
     }
 
@@ -91,6 +93,7 @@ final class ChatViewController: UIViewController {
         tableView.backgroundColor = .clear
         tableView.separatorStyle = .none
         tableView.showsVerticalScrollIndicator = false
+        tableView.keyboardDismissMode = .interactive
         tableView.dataSource = self
         tableView.delegate = self
         tableView.rowHeight = UITableView.automaticDimension
@@ -100,15 +103,14 @@ final class ChatViewController: UIViewController {
         view.addSubview(tableView)
 
         NSLayoutConstraint.activate([
-            tableView.topAnchor.constraint(equalTo: view.topAnchor, constant: 214),
+            tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 92),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -118)
+            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -88)
         ])
     }
 
     private func setupInputBar() {
-        let inputBar = UIView()
         inputBar.backgroundColor = .white
         inputBar.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(inputBar)
@@ -138,21 +140,42 @@ final class ChatViewController: UIViewController {
         inputBar.addSubview(sendButton)
 
         NSLayoutConstraint.activate([
-            inputBar.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 13),
-            inputBar.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -13),
-            inputBar.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            inputBar.heightAnchor.constraint(equalToConstant: 116),
+            inputBar.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 0),
+            inputBar.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: 0),
+            inputBar.bottomAnchor.constraint(equalTo: view.keyboardLayoutGuide.bottomAnchor, constant: 0),
+            inputBar.heightAnchor.constraint(equalToConstant: 83),
 
             textField.leadingAnchor.constraint(equalTo: inputBar.leadingAnchor, constant: 15),
-            textField.topAnchor.constraint(equalTo: inputBar.topAnchor, constant: 16),
-            textField.trailingAnchor.constraint(equalTo: sendButton.leadingAnchor, constant: -22),
-            textField.heightAnchor.constraint(equalToConstant: 56),
+            textField.topAnchor.constraint(equalTo: inputBar.topAnchor, constant: 11),
+            textField.trailingAnchor.constraint(equalTo: sendButton.leadingAnchor, constant: -15),
+            textField.heightAnchor.constraint(equalToConstant: 40),
 
-            sendButton.trailingAnchor.constraint(equalTo: inputBar.trailingAnchor, constant: -22),
-            sendButton.topAnchor.constraint(equalTo: inputBar.topAnchor, constant: 16),
+            sendButton.trailingAnchor.constraint(equalTo: inputBar.trailingAnchor, constant: -15),
+            sendButton.topAnchor.constraint(equalTo: inputBar.topAnchor, constant: 11),
             sendButton.widthAnchor.constraint(equalToConstant: 50),
             sendButton.heightAnchor.constraint(equalToConstant: 40)
         ])
+    }
+
+    private func setupKeyboardDismiss() {
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(hideKeyboard))
+        tapGesture.cancelsTouchesInView = false
+        view.addGestureRecognizer(tapGesture)
+    }
+
+    private func setupKeyboardObserver() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(keyboardFrameDidChange(_:)),
+            name: UIResponder.keyboardWillChangeFrameNotification,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(keyboardFrameDidChange(_:)),
+            name: UIResponder.keyboardWillHideNotification,
+            object: nil
+        )
     }
 
     private func makeTagLabel(_ text: String) -> UILabel {
@@ -165,15 +188,38 @@ final class ChatViewController: UIViewController {
         label.layer.cornerRadius = 12
         label.layer.masksToBounds = true
         label.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            label.widthAnchor.constraint(greaterThanOrEqualToConstant: 70),
-            label.heightAnchor.constraint(equalToConstant: 24)
-        ])
+        label.widthAnchor.constraint(equalToConstant: text.width(font: label.font) + 22).isActive = true
+        label.heightAnchor.constraint(equalToConstant: 24).isActive = true
         return label
     }
 
     @objc private func closePage() {
         dismiss(animated: true)
+    }
+
+    @objc private func hideKeyboard() {
+        view.endEditing(true)
+    }
+
+    @objc private func keyboardFrameDidChange(_ notification: Notification) {
+        guard
+            let userInfo = notification.userInfo,
+            let keyboardFrame = userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect
+        else { return }
+
+        let convertedFrame = view.convert(keyboardFrame, from: nil)
+        let keyboardHeight = max(0, view.bounds.maxY - convertedFrame.minY)
+        let bottomOffset = max(0, keyboardHeight - view.safeAreaInsets.bottom + 10)
+        let duration = userInfo[UIResponder.keyboardAnimationDurationUserInfoKey] as? TimeInterval ?? 0.25
+        let curveValue = userInfo[UIResponder.keyboardAnimationCurveUserInfoKey] as? UInt ?? 7
+        let options = UIView.AnimationOptions(rawValue: curveValue << 16)
+
+        UIView.animate(withDuration: duration, delay: 0, options: options) {
+            self.inputBar.transform = CGAffineTransform(translationX: 0, y: -bottomOffset)
+            self.tableView.contentInset.bottom = bottomOffset
+            self.tableView.verticalScrollIndicatorInsets.bottom = bottomOffset
+            self.view.layoutIfNeeded()
+        }
     }
 
 }
@@ -198,6 +244,15 @@ extension ChatViewController: UITableViewDataSource, UITableViewDelegate {
 
         messageCell.configure(with: messages[indexPath.row])
         return messageCell
+    }
+
+}
+
+private extension String {
+
+    func width(font: UIFont) -> CGFloat {
+        let attributes: [NSAttributedString.Key: Any] = [.font: font]
+        return ceil((self as NSString).size(withAttributes: attributes).width)
     }
 
 }

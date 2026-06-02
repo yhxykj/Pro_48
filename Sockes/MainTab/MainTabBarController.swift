@@ -36,7 +36,7 @@ final class MainTabBarController: UITabBarController {
                 selectedImageName: Asset.homeSelected
             ),
             makeTabPage(
-                viewController: UIViewController(),
+                viewController: EmotionSyncViewController(),
                 title: "疗愈",
                 normalImageName: Asset.healNormal,
                 selectedImageName: Asset.healSelected

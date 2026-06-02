@@ -209,8 +209,8 @@ class LoginViewController: UIViewController {
 
     @objc private func showMainTabBar() {
         let tabBarController = MainTabBarController()
-        tabBarController.modalPresentationStyle = .fullScreen
-        present(tabBarController, animated: true)
+        view.window?.rootViewController = tabBarController
+        view.window?.makeKeyAndVisible()
     }
 
 }

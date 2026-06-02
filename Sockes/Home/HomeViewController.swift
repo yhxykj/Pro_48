@@ -24,7 +24,7 @@ final class HomeViewController: UIViewController {
     }
 
     private let tableView = UITableView(frame: .zero, style: .plain)
-    private var needsUnlock = true
+    private var unlockedRows: Set<Int> = []
     private var pendingChatIndexPath: IndexPath?
     private weak var unlockOverlayView: UIView?
 
@@ -216,7 +216,9 @@ final class HomeViewController: UIViewController {
     }
 
     @objc private func confirmUnlock() {
-        needsUnlock = false
+        if let pendingChatIndexPath {
+            unlockedRows.insert(pendingChatIndexPath.row)
+        }
         closeUnlockDialog()
         showChatPage()
     }
@@ -264,11 +266,11 @@ extension HomeViewController: UITableViewDataSource, UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
 
-        if needsUnlock {
+        if unlockedRows.contains(indexPath.row) {
+            showChatPage()
+        } else {
             pendingChatIndexPath = indexPath
             showUnlockDialog()
-        } else {
-            showChatPage()
         }
     }
 
