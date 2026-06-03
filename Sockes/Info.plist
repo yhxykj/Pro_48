@@ -3,9 +3,15 @@
 <plist version="1.0">
 <dict>
 	<key>NSCameraUsageDescription</key>
-	<string>Allow access to the camera to add a photo to your emotion post.</string>
+	<string>Allow access to the camera for video calls and emotion posts.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Allow access to the microphone for voice during video calls.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Allow access to the photo library to add a photo to your emotion post.</string>
+	<key>UIAppFonts</key>
+	<array>
+		<string>Fonts/LexendDeca-Regular.ttf</string>
+	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

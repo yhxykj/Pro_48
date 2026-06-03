@@ -42,13 +42,13 @@ final class MainTabBarController: UITabBarController {
                 selectedImageName: Asset.healSelected
             ),
             makeTabPage(
-                viewController: UIViewController(),
+                viewController: MessageViewController(),
                 title: "消息",
                 normalImageName: Asset.chatNormal,
                 selectedImageName: Asset.chatSelected
             ),
             makeTabPage(
-                viewController: UIViewController(),
+                viewController: ProfileViewController(),
                 title: "我的",
                 normalImageName: Asset.profileNormal,
                 selectedImageName: Asset.profileSelected

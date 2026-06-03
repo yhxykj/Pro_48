@@ -24,7 +24,7 @@ final class EmotionUserProfileViewController: UIViewController {
 
     private enum FallbackAsset {
         static let backIcon = "Common/common_back_icon"
-        static let alertIcon = "EmotionSync/PostDetail/post_detail_alert_icon"
+        static let alertIcon = "EmotionSync/UserProfile/user_profile_play_button"
         static let videoButton = "EmotionSync/emotion_sync_video_button"
         static let mailButton = "EmotionSync/emotion_sync_mail_button"
     }
@@ -168,7 +168,7 @@ final class EmotionUserProfileViewController: UIViewController {
             profilePanelView.topAnchor.constraint(equalTo: headerPhotoView.bottomAnchor, constant: -46),
             profilePanelView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             profilePanelView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-            profilePanelView.heightAnchor.constraint(equalToConstant: 88),
+            profilePanelView.heightAnchor.constraint(equalToConstant: 68),
 
             avatarView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
             avatarView.centerYAnchor.constraint(equalTo: profilePanelView.topAnchor, constant: 18),
@@ -194,7 +194,7 @@ final class EmotionUserProfileViewController: UIViewController {
             starButton.heightAnchor.constraint(equalToConstant: 36),
 
             postTitleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
-            postTitleLabel.topAnchor.constraint(equalTo: profilePanelView.bottomAnchor, constant: 15),
+            postTitleLabel.topAnchor.constraint(equalTo: profilePanelView.bottomAnchor, constant: 5),
 
             postCardView.topAnchor.constraint(equalTo: postTitleLabel.bottomAnchor, constant: 18),
             postCardView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 15),
@@ -299,10 +299,11 @@ final class EmotionUserProfileViewController: UIViewController {
         cardView.addSubview(cardBackgroundView)
 
         let avatarView = makeProfileAvatarView()
+        avatarView.layer.cornerRadius = 26
         cardView.addSubview(avatarView)
 
         let avatarRingView = UIImageView(image: UIImage(named: Asset.avatarRing))
-        avatarRingView.contentMode = .scaleAspectFit
+        avatarRingView.contentMode = .scaleAspectFill
         avatarRingView.translatesAutoresizingMaskIntoConstraints = false
         cardView.addSubview(avatarRingView)
 
