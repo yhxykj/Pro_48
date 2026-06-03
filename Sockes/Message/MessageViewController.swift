@@ -11,6 +11,35 @@ struct MessageFriend {
     let name: String
     let message: String
     let avatarColor: UIColor
+    let avatarImageName: String?
+    let profileVideoFileName: String?
+
+    init(
+        name: String,
+        message: String,
+        avatarColor: UIColor,
+        avatarImageName: String? = nil,
+        profileVideoFileName: String? = nil
+    ) {
+        self.name = name
+        self.message = message
+        self.avatarColor = avatarColor
+        self.avatarImageName = avatarImageName
+        self.profileVideoFileName = profileVideoFileName
+    }
+}
+
+extension MessageFriend {
+
+    var blockedUser: BlockedUser {
+        BlockedUser(
+            name: name,
+            message: message,
+            avatarImageName: avatarImageName,
+            profileVideoFileName: profileVideoFileName
+        )
+    }
+
 }
 
 final class MessageViewController: UIViewController {
@@ -20,19 +49,24 @@ final class MessageViewController: UIViewController {
         static let messageTitle = "Message/message_section_title"
     }
 
-    private let messages: [MessageFriend] = [
-        MessageFriend(name: "Williams", message: "Smart and handsome sunshine boy.", avatarColor: UIColor(red: 0.96, green: 0.75, blue: 0.41, alpha: 1)),
-        MessageFriend(name: "Greer", message: "Smart and handsome sunshine boy.", avatarColor: UIColor(red: 0.83, green: 0.55, blue: 0.36, alpha: 1)),
-        MessageFriend(name: "Mianon", message: "Smart and handsome sunshine boy.", avatarColor: UIColor(red: 0.60, green: 0.39, blue: 0.72, alpha: 1)),
-        MessageFriend(name: "Tawanna", message: "Smart and handsome sunshine boy.", avatarColor: UIColor(red: 0.98, green: 0.68, blue: 0.53, alpha: 1))
-    ]
+    private var messages: [MessageFriend] = []
 
     private let tableView = UITableView(frame: .zero, style: .plain)
+    private let emptyStateView = EmptyStateView()
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        loadMessages()
         setupContent()
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+
+        loadMessages()
+        tableView.reloadData()
+        updateEmptyState()
     }
 
     private func setupContent() {
@@ -59,6 +93,9 @@ final class MessageViewController: UIViewController {
         tableView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(tableView)
 
+        emptyStateView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(emptyStateView)
+
         NSLayoutConstraint.activate([
             topBackgroundImageView.topAnchor.constraint(equalTo: view.topAnchor),
             topBackgroundImageView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -73,8 +110,33 @@ final class MessageViewController: UIViewController {
             tableView.topAnchor.constraint(equalTo: messageTitleImageView.bottomAnchor, constant: 13),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+
+            emptyStateView.topAnchor.constraint(equalTo: tableView.topAnchor, constant: 12),
+            emptyStateView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            emptyStateView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            emptyStateView.heightAnchor.constraint(equalToConstant: 260)
         ])
+
+        updateEmptyState()
+    }
+
+    private func updateEmptyState() {
+        let isEmpty = visibleMessages.isEmpty
+        tableView.isHidden = isEmpty
+        emptyStateView.isHidden = !isEmpty
+    }
+
+    private func loadMessages() {
+        messages = MessageConversationStore.summaries().map {
+            MessageFriend(
+                name: $0.name,
+                message: $0.message,
+                avatarColor: UIColor(red: 0.76, green: 0.87, blue: 1.00, alpha: 1),
+                avatarImageName: $0.avatarImageName,
+                profileVideoFileName: $0.profileVideoFileName
+            )
+        }
     }
 
 }
@@ -82,7 +144,7 @@ final class MessageViewController: UIViewController {
 extension MessageViewController: UITableViewDataSource, UITableViewDelegate {
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        messages.count
+        visibleMessages.count
     }
 
     func tableView(
@@ -93,16 +155,30 @@ extension MessageViewController: UITableViewDataSource, UITableViewDelegate {
             withIdentifier: MessageFriendCell.reuseIdentifier,
             for: indexPath
         ) as? MessageFriendCell
-        cell?.configure(with: messages[indexPath.row])
+        cell?.configure(with: visibleMessages[indexPath.row])
         return cell ?? UITableViewCell()
     }
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
 
-        let viewController = MessageChatViewController(friend: messages[indexPath.row])
+        let friend = visibleMessages[indexPath.row]
+        guard !UserBlockStore.isBlocked(name: friend.name) else {
+            showBlockedUserAlert()
+            return
+        }
+
+        let viewController = MessageChatViewController(friend: friend)
         viewController.modalPresentationStyle = .fullScreen
         present(viewController, animated: true)
+    }
+
+}
+
+private extension MessageViewController {
+
+    var visibleMessages: [MessageFriend] {
+        messages.filter { !UserBlockStore.isBlocked(name: $0.name) }
     }
 
 }

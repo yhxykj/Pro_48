@@ -5,19 +5,18 @@
 //  Created by 上包666 on 2026/6/2.
 //
 
+import AVFoundation
 import UIKit
 
 final class EmotionUserProfileViewController: UIViewController {
 
     private enum Asset {
-        static let headerPhoto = "EmotionSync/UserProfile/user_profile_header_photo"
         static let backIcon = "EmotionSync/UserProfile/user_profile_back_icon"
         static let alertIcon = "EmotionSync/UserProfile/user_profile_alert_icon"
         static let starNormal = "EmotionSync/UserProfile/user_profile_star_normal"
         static let starSelected = "EmotionSync/UserProfile/user_profile_star_selected"
         static let videoButton = "EmotionSync/UserProfile/user_profile_video_button"
         static let mailButton = "EmotionSync/UserProfile/user_profile_mail_button"
-        static let playButton = "EmotionSync/UserProfile/user_profile_play_button"
         static let cardBackground = "EmotionSync/emotion_sync_post_card_background"
         static let avatarRing = "EmotionSync/emotion_sync_avatar_ring"
     }
@@ -30,7 +29,12 @@ final class EmotionUserProfileViewController: UIViewController {
     }
 
     private let post: EmotionPost
+    private let headerVideoView = UIView()
     private let starButton = UIButton(type: .custom)
+    private let playButton = UIButton(type: .custom)
+    private var headerPlayer: AVPlayer?
+    private var headerPlayerLayer: AVPlayerLayer?
+    private var isHeaderVideoPlaying = false
 
     init(post: EmotionPost) {
         self.post = post
@@ -45,6 +49,28 @@ final class EmotionUserProfileViewController: UIViewController {
         super.viewDidLoad()
 
         setupContent()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+
+        playHeaderVideo()
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+
+        headerPlayerLayer?.frame = headerVideoView.bounds
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+
+        pauseHeaderVideo()
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
 
     private func setupContent() {
@@ -62,8 +88,8 @@ final class EmotionUserProfileViewController: UIViewController {
         contentView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(contentView)
 
-        let headerPhotoView = makeHeaderPhotoView()
-        contentView.addSubview(headerPhotoView)
+        configureHeaderVideoView()
+        contentView.addSubview(headerVideoView)
 
         let backButton = UIButton(type: .custom)
         backButton.setImage(loadImage(named: Asset.backIcon, fallbackName: FallbackAsset.backIcon), for: .normal)
@@ -79,7 +105,7 @@ final class EmotionUserProfileViewController: UIViewController {
         alertButton.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(alertButton)
 
-        let playButton = makePlayButton()
+        configurePlayButton()
         contentView.addSubview(playButton)
         
         let backgroundImageView = UIImageView(image: UIImage(named: "EmotionSync/ShareEmotions/share_emotions_background"))
@@ -94,11 +120,11 @@ final class EmotionUserProfileViewController: UIViewController {
         profilePanelView.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(profilePanelView)
 
-        let avatarView = makeProfileAvatarView()
+        let avatarView = makeProfileAvatarView(cornerRadius: 33)
         contentView.addSubview(avatarView)
 
         let nameLabel = UILabel()
-        nameLabel.text = "Williams"
+        nameLabel.text = post.name
         nameLabel.font = .systemFont(ofSize: 17, weight: .semibold)
         nameLabel.textColor = UIColor(red: 0.19, green: 0.19, blue: 0.20, alpha: 1)
         nameLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -109,11 +135,13 @@ final class EmotionUserProfileViewController: UIViewController {
 
         let videoButton = UIButton(type: .custom)
         videoButton.setImage(loadImage(named: Asset.videoButton, fallbackName: FallbackAsset.videoButton), for: .normal)
+        videoButton.addTarget(self, action: #selector(showVideoCallPage), for: .touchUpInside)
         videoButton.translatesAutoresizingMaskIntoConstraints = false
         profilePanelView.addSubview(videoButton)
 
         let mailButton = UIButton(type: .custom)
         mailButton.setImage(loadImage(named: Asset.mailButton, fallbackName: FallbackAsset.mailButton), for: .normal)
+        mailButton.addTarget(self, action: #selector(showMessageChatPage), for: .touchUpInside)
         mailButton.translatesAutoresizingMaskIntoConstraints = false
         profilePanelView.addSubview(mailButton)
 
@@ -140,10 +168,10 @@ final class EmotionUserProfileViewController: UIViewController {
             contentView.widthAnchor.constraint(equalTo: scrollView.frameLayoutGuide.widthAnchor),
             contentView.heightAnchor.constraint(greaterThanOrEqualTo: view.heightAnchor),
 
-            headerPhotoView.topAnchor.constraint(equalTo: contentView.topAnchor),
-            headerPhotoView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-            headerPhotoView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-            headerPhotoView.heightAnchor.constraint(equalToConstant: 598),
+            headerVideoView.topAnchor.constraint(equalTo: contentView.topAnchor),
+            headerVideoView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            headerVideoView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            headerVideoView.heightAnchor.constraint(equalToConstant: 598),
 
             backButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 13),
             backButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 3),
@@ -156,16 +184,16 @@ final class EmotionUserProfileViewController: UIViewController {
             alertButton.heightAnchor.constraint(equalToConstant: 44),
 
             playButton.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
-            playButton.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 368),
+            playButton.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 340),
             playButton.widthAnchor.constraint(equalToConstant: 48),
             playButton.heightAnchor.constraint(equalToConstant: 48),
             
-            backgroundImageView.topAnchor.constraint(equalTo: headerPhotoView.bottomAnchor, constant: -46),
+            backgroundImageView.topAnchor.constraint(equalTo: headerVideoView.bottomAnchor, constant: -46),
             backgroundImageView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             backgroundImageView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
             backgroundImageView.heightAnchor.constraint(equalToConstant: 200),
 
-            profilePanelView.topAnchor.constraint(equalTo: headerPhotoView.bottomAnchor, constant: -46),
+            profilePanelView.topAnchor.constraint(equalTo: headerVideoView.bottomAnchor, constant: -46),
             profilePanelView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             profilePanelView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
             profilePanelView.heightAnchor.constraint(equalToConstant: 68),
@@ -204,55 +232,38 @@ final class EmotionUserProfileViewController: UIViewController {
         ])
     }
 
-    private func makeHeaderPhotoView() -> UIView {
-        if let image = UIImage(named: Asset.headerPhoto) {
-            let imageView = UIImageView(image: image)
-            imageView.contentMode = .scaleAspectFill
-            imageView.clipsToBounds = true
-            imageView.translatesAutoresizingMaskIntoConstraints = false
-            return imageView
-        }
+    private func configureHeaderVideoView() {
+        headerVideoView.backgroundColor = UIColor(red: 0.63, green: 0.76, blue: 0.61, alpha: 1)
+        headerVideoView.clipsToBounds = true
+        headerVideoView.translatesAutoresizingMaskIntoConstraints = false
+        headerVideoView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(toggleHeaderVideo)))
 
-        let placeholderView = UIView()
-        placeholderView.backgroundColor = UIColor(red: 0.63, green: 0.76, blue: 0.61, alpha: 1)
-        placeholderView.translatesAutoresizingMaskIntoConstraints = false
+        guard let videoURL = profileVideoURL() else { return }
 
-        let imageLabel = UILabel()
-        imageLabel.text = "Williams"
-        imageLabel.font = .systemFont(ofSize: 42, weight: .bold)
-        imageLabel.textColor = UIColor.white.withAlphaComponent(0.42)
-        imageLabel.translatesAutoresizingMaskIntoConstraints = false
-        placeholderView.addSubview(imageLabel)
+        let player = AVPlayer(url: videoURL)
+        let playerLayer = AVPlayerLayer(player: player)
+        playerLayer.videoGravity = .resizeAspectFill
+        headerVideoView.layer.addSublayer(playerLayer)
+        headerPlayer = player
+        headerPlayerLayer = playerLayer
 
-        NSLayoutConstraint.activate([
-            imageLabel.centerXAnchor.constraint(equalTo: placeholderView.centerXAnchor),
-            imageLabel.centerYAnchor.constraint(equalTo: placeholderView.centerYAnchor)
-        ])
-
-        return placeholderView
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(replayHeaderVideo),
+            name: .AVPlayerItemDidPlayToEndTime,
+            object: player.currentItem
+        )
     }
 
-    private func makeProfileAvatarView() -> UIView {
-        let avatarView = UIView()
+    private func makeProfileAvatarView(cornerRadius: CGFloat) -> UIImageView {
+        let avatarView = UIImageView(image: UIImage(named: post.avatarImageName))
+        avatarView.contentMode = .scaleAspectFill
         avatarView.backgroundColor = UIColor(red: 0.96, green: 0.76, blue: 0.50, alpha: 1)
-        avatarView.layer.cornerRadius = 33
+        avatarView.layer.cornerRadius = cornerRadius
         avatarView.layer.borderWidth = 1
         avatarView.layer.borderColor = UIColor(red: 0.41, green: 0.65, blue: 1.00, alpha: 1).cgColor
         avatarView.clipsToBounds = true
         avatarView.translatesAutoresizingMaskIntoConstraints = false
-
-        let label = UILabel()
-        label.text = "W"
-        label.font = .systemFont(ofSize: 26, weight: .bold)
-        label.textColor = .white
-        label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
-        avatarView.addSubview(label)
-
-        NSLayoutConstraint.activate([
-            label.centerXAnchor.constraint(equalTo: avatarView.centerXAnchor),
-            label.centerYAnchor.constraint(equalTo: avatarView.centerYAnchor)
-        ])
 
         return avatarView
     }
@@ -260,26 +271,20 @@ final class EmotionUserProfileViewController: UIViewController {
     private func configureStarButton() {
         starButton.setImage(UIImage(named: Asset.starNormal), for: .normal)
         starButton.setImage(UIImage(named: Asset.starSelected), for: .selected)
-        if UIImage(named: Asset.starNormal) == nil {
-        }
+        starButton.isSelected = ProfileSocialData.isFollowing(name: post.name)
         starButton.addTarget(self, action: #selector(toggleStarState), for: .touchUpInside)
         starButton.translatesAutoresizingMaskIntoConstraints = false
     }
 
-    private func makePlayButton() -> UIButton {
-        let button = UIButton(type: .custom)
-        if let image = UIImage(named: Asset.playButton) {
-            button.setImage(image, for: .normal)
-        } else {
-            button.setTitle("▶", for: .normal)
-            button.setTitleColor(UIColor(red: 0.38, green: 0.72, blue: 0.70, alpha: 1), for: .normal)
-            button.titleLabel?.font = .systemFont(ofSize: 24, weight: .semibold)
-            button.backgroundColor = UIColor.white.withAlphaComponent(0.62)
-            button.layer.cornerRadius = 24
-            button.layer.masksToBounds = true
-        }
-        button.translatesAutoresizingMaskIntoConstraints = false
-        return button
+    private func configurePlayButton() {
+        playButton.tintColor = UIColor(red: 0.38, green: 0.72, blue: 0.70, alpha: 1)
+        playButton.backgroundColor = UIColor.white.withAlphaComponent(0.62)
+        playButton.layer.cornerRadius = 24
+        playButton.layer.masksToBounds = true
+        playButton.addTarget(self, action: #selector(toggleHeaderVideo), for: .touchUpInside)
+        playButton.isHidden = true
+        playButton.translatesAutoresizingMaskIntoConstraints = false
+        updatePlayButtonIcon(isPlaying: false)
     }
 
     private func makeProfilePostCard() -> UIView {
@@ -298,8 +303,7 @@ final class EmotionUserProfileViewController: UIViewController {
         cardBackgroundView.translatesAutoresizingMaskIntoConstraints = false
         cardView.addSubview(cardBackgroundView)
 
-        let avatarView = makeProfileAvatarView()
-        avatarView.layer.cornerRadius = 26
+        let avatarView = makeProfileAvatarView(cornerRadius: 26)
         cardView.addSubview(avatarView)
 
         let avatarRingView = UIImageView(image: UIImage(named: Asset.avatarRing))
@@ -308,21 +312,21 @@ final class EmotionUserProfileViewController: UIViewController {
         cardView.addSubview(avatarRingView)
 
         let nameLabel = UILabel()
-        nameLabel.text = "Arlan"
+        nameLabel.text = post.name
         nameLabel.font = .systemFont(ofSize: 15, weight: .semibold)
         nameLabel.textColor = UIColor(red: 0.20, green: 0.20, blue: 0.22, alpha: 1)
         nameLabel.translatesAutoresizingMaskIntoConstraints = false
         cardView.addSubview(nameLabel)
 
         let timeLabel = UILabel()
-        timeLabel.text = "10 min ago"
+        timeLabel.text = post.time
         timeLabel.font = .systemFont(ofSize: 14, weight: .regular)
         timeLabel.textColor = UIColor(red: 0.45, green: 0.45, blue: 0.46, alpha: 1)
         timeLabel.translatesAutoresizingMaskIntoConstraints = false
         cardView.addSubview(timeLabel)
 
         let contentLabel = UILabel()
-        contentLabel.text = "Don't be discouraged; it's often the last key in the bunch\nthat opens the lock."
+        contentLabel.text = post.content
         contentLabel.numberOfLines = 2
         contentLabel.font = .systemFont(ofSize: 13, weight: .regular)
         contentLabel.textColor = UIColor(red: 0.68, green: 0.68, blue: 0.68, alpha: 1)
@@ -335,8 +339,8 @@ final class EmotionUserProfileViewController: UIViewController {
         photoStackView.translatesAutoresizingMaskIntoConstraints = false
         cardView.addSubview(photoStackView)
 
-        post.photoColors.prefix(2).forEach { color in
-            photoStackView.addArrangedSubview(makePostPhotoView(color: color))
+        post.photoImageNames.prefix(2).forEach { imageName in
+            photoStackView.addArrangedSubview(makePostPhotoView(imageName: imageName))
         }
 
         NSLayoutConstraint.activate([
@@ -373,28 +377,19 @@ final class EmotionUserProfileViewController: UIViewController {
         return cardView
     }
 
-    private func makePostPhotoView(color: UIColor) -> UIView {
-        let view = UIView()
-        view.backgroundColor = color
-        view.layer.cornerRadius = 4
-        view.clipsToBounds = true
-        view.translatesAutoresizingMaskIntoConstraints = false
-
-        let label = UILabel()
-        label.text = "AI"
-        label.font = .systemFont(ofSize: 22, weight: .bold)
-        label.textColor = UIColor.white.withAlphaComponent(0.82)
-        label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(label)
+    private func makePostPhotoView(imageName: String) -> UIImageView {
+        let imageView = UIImageView(image: UIImage(named: imageName))
+        imageView.contentMode = .scaleAspectFill
+        imageView.backgroundColor = UIColor(red: 0.92, green: 0.95, blue: 1.00, alpha: 1)
+        imageView.layer.cornerRadius = 4
+        imageView.clipsToBounds = true
+        imageView.translatesAutoresizingMaskIntoConstraints = false
 
         NSLayoutConstraint.activate([
-            view.widthAnchor.constraint(equalToConstant: 84),
-            label.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            label.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+            imageView.widthAnchor.constraint(equalToConstant: 84)
         ])
 
-        return view
+        return imageView
     }
 
     private func loadImage(named name: String, fallbackName: String) -> UIImage? {
@@ -406,11 +401,116 @@ final class EmotionUserProfileViewController: UIViewController {
     }
 
     @objc private func toggleStarState() {
-        starButton.isSelected.toggle()
+        if starButton.isSelected {
+            ProfileSocialData.unfollow(name: post.name)
+            starButton.isSelected = false
+        } else {
+            ProfileSocialData.follow(makeProfileListUser())
+            starButton.isSelected = true
+        }
     }
 
     @objc private func showReportMenu(_ sender: UIButton) {
-        showEmotionReportMenu(from: sender)
+        showEmotionReportMenu(
+            from: sender,
+            onReport: { [weak self] in
+                self?.showReportReceivedAlert()
+            },
+            onBlock: { [weak self] in
+                guard let self else { return }
+
+                self.showBlockConfirmation(for: self.post.blockedUser) { [weak self] in
+                    self?.returnToPrimaryPage(.emotionSync)
+                }
+            }
+        )
+    }
+
+    @objc private func showVideoCallPage() {
+        guard !UserBlockStore.isBlocked(name: post.name) else {
+            showBlockedUserAlert()
+            return
+        }
+
+        let viewController = MessageVideoCallViewController(friend: makeMessageFriend())
+        viewController.modalPresentationStyle = .fullScreen
+        present(viewController, animated: true)
+    }
+
+    @objc private func showMessageChatPage() {
+        guard !UserBlockStore.isBlocked(name: post.name) else {
+            showBlockedUserAlert()
+            return
+        }
+
+        let viewController = MessageChatViewController(
+            friend: makeMessageFriend(),
+            returnDestination: .emotionSync
+        )
+        viewController.modalPresentationStyle = .fullScreen
+        present(viewController, animated: true)
+    }
+
+    @objc private func toggleHeaderVideo() {
+        isHeaderVideoPlaying ? pauseHeaderVideo() : playHeaderVideo()
+    }
+
+    @objc private func replayHeaderVideo() {
+        headerPlayer?.seek(to: .zero)
+        playHeaderVideo()
+    }
+
+    private func playHeaderVideo() {
+        guard let headerPlayer else { return }
+
+        headerPlayer.play()
+        isHeaderVideoPlaying = true
+        updatePlayButtonIcon(isPlaying: true)
+        playButton.isHidden = true
+    }
+
+    private func pauseHeaderVideo() {
+        headerPlayer?.pause()
+        isHeaderVideoPlaying = false
+        updatePlayButtonIcon(isPlaying: false)
+        playButton.isHidden = false
+    }
+
+    private func updatePlayButtonIcon(isPlaying: Bool) {
+        let configuration = UIImage.SymbolConfiguration(pointSize: 20, weight: .semibold)
+        let image = UIImage(systemName: "play.fill", withConfiguration: configuration)
+        playButton.setImage(image, for: .normal)
+    }
+
+    private func makeMessageFriend() -> MessageFriend {
+        MessageFriend(
+            name: post.name,
+            message: post.content,
+            avatarColor: UIColor(red: 0.76, green: 0.87, blue: 1.00, alpha: 1),
+            avatarImageName: post.avatarImageName,
+            profileVideoFileName: post.profileVideoFileName
+        )
+    }
+
+    private func makeProfileListUser() -> ProfileListUser {
+        ProfileListUser(
+            name: post.name,
+            avatarColor: UIColor(red: 0.76, green: 0.87, blue: 1.00, alpha: 1),
+            avatarImageName: post.avatarImageName,
+            message: post.content,
+            profileVideoFileName: post.profileVideoFileName
+        )
+    }
+
+    private func profileVideoURL() -> URL? {
+        Bundle.main.url(
+            forResource: post.profileVideoFileName,
+            withExtension: "mp4",
+            subdirectory: "Video"
+        ) ?? Bundle.main.url(
+            forResource: post.profileVideoFileName,
+            withExtension: "mp4"
+        )
     }
 
 }

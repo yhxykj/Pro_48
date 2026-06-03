@@ -9,7 +9,11 @@ import UIKit
 
 extension UIViewController {
 
-    func showEmotionReportMenu(from sourceView: UIView) {
+    func showEmotionReportMenu(
+        from sourceView: UIView,
+        onReport: (() -> Void)? = nil,
+        onBlock: (() -> Void)? = nil
+    ) {
         view.endEditing(true)
 
         let overlayView = UIView()
@@ -37,8 +41,18 @@ extension UIViewController {
         overlayView.addSubview(menuView)
 
         let stackView = UIStackView(arrangedSubviews: [
-            makeEmotionReportMenuRow(iconName: "EmotionSync/ReportMenu/report_menu_report_icon", title: "Report"),
-            makeEmotionReportMenuRow(iconName: "EmotionSync/ReportMenu/report_menu_block_icon", title: "Block")
+            makeEmotionReportMenuRow(
+                iconName: "EmotionSync/ReportMenu/report_menu_report_icon",
+                title: "Report",
+                overlayView: overlayView,
+                action: onReport
+            ),
+            makeEmotionReportMenuRow(
+                iconName: "EmotionSync/ReportMenu/report_menu_block_icon",
+                title: "Block",
+                overlayView: overlayView,
+                action: onBlock
+            )
         ])
         stackView.axis = .vertical
         stackView.spacing = 0
@@ -76,9 +90,22 @@ extension UIViewController {
         }
     }
 
-    private func makeEmotionReportMenuRow(iconName: String, title: String) -> UIView {
-        let rowView = UIView()
+    private func makeEmotionReportMenuRow(
+        iconName: String,
+        title: String,
+        overlayView: UIView,
+        action: (() -> Void)?
+    ) -> UIControl {
+        let rowView = UIControl()
         rowView.backgroundColor = .white
+        rowView.addAction(UIAction { [weak overlayView] _ in
+            UIView.animate(withDuration: 0.18) {
+                overlayView?.alpha = 0
+            } completion: { _ in
+                overlayView?.removeFromSuperview()
+                action?()
+            }
+        }, for: .touchUpInside)
         rowView.translatesAutoresizingMaskIntoConstraints = false
 
         let iconImageView = UIImageView(image: UIImage(named: iconName))

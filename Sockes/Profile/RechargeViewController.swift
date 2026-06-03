@@ -29,6 +29,12 @@ final class RechargeViewController: UIViewController {
         static let coinPackageCard = "Profile/Recharge/recharge_coin_package_card"
     }
 
+    private struct CoinPackage {
+        let productID: String
+        let coins: Int
+        let imageName: String
+    }
+
     private let balanceLabel = UILabel()
     private let purchaseLoadingView = UIView()
     private let purchaseLoadingIndicatorView = UIActivityIndicatorView(style: .medium)
@@ -54,8 +60,15 @@ final class RechargeViewController: UIViewController {
         return collectionView
     }()
 
-    private let packageCount = 9
-    private var coinProduct: Product?
+    private let coinPackages: [CoinPackage] = Array(
+        repeating: CoinPackage(
+            productID: ProductIdentifier.coin99,
+            coins: 99,
+            imageName: Asset.coinPackageCard
+        ),
+        count: 9
+    )
+    private var coinProducts: [String: Product] = [:]
     private var coinBalance = 0
     private var isPurchasing = false
     private var transactionListenerTask: Task<Void, Never>?
@@ -67,7 +80,7 @@ final class RechargeViewController: UIViewController {
         setupContent()
         transactionListenerTask = listenForTransactions()
         Task {
-            await loadCoinProduct()
+            await loadCoinProducts()
         }
     }
 
@@ -78,15 +91,9 @@ final class RechargeViewController: UIViewController {
     private func setupContent() {
         view.backgroundColor = UIColor(red: 0.96, green: 0.96, blue: 0.97, alpha: 1)
 
-        let scrollView = UIScrollView()
-        scrollView.showsVerticalScrollIndicator = false
-        scrollView.contentInsetAdjustmentBehavior = .never
-        scrollView.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(scrollView)
-
         let contentView = UIView()
         contentView.translatesAutoresizingMaskIntoConstraints = false
-        scrollView.addSubview(contentView)
+        view.addSubview(contentView)
 
         let topBackgroundImageView = UIImageView(image: UIImage(named: Asset.topBackground))
         topBackgroundImageView.contentMode = .scaleToFill
@@ -121,17 +128,10 @@ final class RechargeViewController: UIViewController {
         contentView.addSubview(packageCollectionView)
 
         NSLayoutConstraint.activate([
-            scrollView.topAnchor.constraint(equalTo: view.topAnchor),
-            scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-
-            contentView.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor),
-            contentView.leadingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.leadingAnchor),
-            contentView.trailingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.trailingAnchor),
-            contentView.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor),
-            contentView.widthAnchor.constraint(equalTo: scrollView.frameLayoutGuide.widthAnchor),
-            contentView.heightAnchor.constraint(greaterThanOrEqualTo: view.heightAnchor),
+            contentView.topAnchor.constraint(equalTo: view.topAnchor),
+            contentView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            contentView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            contentView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
 
             topBackgroundImageView.topAnchor.constraint(equalTo: contentView.topAnchor),
             topBackgroundImageView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
@@ -164,17 +164,17 @@ final class RechargeViewController: UIViewController {
         setupPurchaseLoadingView()
     }
 
-    private func purchaseCoinPackage(from cardView: UIView) async {
+    private func purchaseCoinPackage(_ coinPackage: CoinPackage, from cardView: UIView) async {
         isPurchasing = true
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
         await animatePackagePress(cardView)
         showPurchaseLoading()
 
-        if coinProduct == nil {
-            await loadCoinProduct()
+        if coinProducts[coinPackage.productID] == nil {
+            await loadCoinProducts()
         }
 
-        guard let coinProduct else {
+        guard let coinProduct = coinProducts[coinPackage.productID] else {
             isPurchasing = false
             hidePurchaseLoading()
             showPurchaseMessage("Product is not available yet.")
@@ -189,7 +189,7 @@ final class RechargeViewController: UIViewController {
                 let transaction = try Self.checkVerified(verificationResult)
                 await transaction.finish()
                 hidePurchaseLoading()
-                playCoinPurchaseAnimation(from: cardView)
+                playCoinPurchaseAnimation(from: cardView, coins: coinPackage.coins)
 
             case .userCancelled:
                 isPurchasing = false
@@ -297,12 +297,13 @@ final class RechargeViewController: UIViewController {
         }
     }
 
-    private func loadCoinProduct() async {
+    private func loadCoinProducts() async {
         do {
-            let products = try await Product.products(for: [ProductIdentifier.coin99])
-            coinProduct = products.first
+            let productIDs = Set(coinPackages.map(\.productID))
+            let products = try await Product.products(for: productIDs)
+            coinProducts = Dictionary(uniqueKeysWithValues: products.map { ($0.id, $0) })
         } catch {
-            coinProduct = nil
+            coinProducts = [:]
         }
     }
 
@@ -314,13 +315,13 @@ final class RechargeViewController: UIViewController {
                 do {
                     let transaction = try Self.checkVerified(verificationResult)
 
-                    guard transaction.productID == ProductIdentifier.coin99 else {
+                    guard let coinPackage = self.coinPackages.first(where: { $0.productID == transaction.productID }) else {
                         await transaction.finish()
                         continue
                     }
 
                     await transaction.finish()
-                    self.finishConsumablePurchase()
+                    self.finishConsumablePurchase(coins: coinPackage.coins)
                 } catch {
                     continue
                 }
@@ -343,7 +344,7 @@ final class RechargeViewController: UIViewController {
         present(alertController, animated: true)
     }
 
-    private func playCoinPurchaseAnimation(from sourceView: UIView) {
+    private func playCoinPurchaseAnimation(from sourceView: UIView, coins: Int) {
         let startFrame = sourceView.convert(sourceView.bounds, to: view)
         let endFrame = balanceLabel.convert(balanceLabel.bounds, to: view)
         let coinView = makeFlyingCoinView()
@@ -375,7 +376,7 @@ final class RechargeViewController: UIViewController {
             }
         } completion: { [weak self, weak coinView] _ in
             coinView?.removeFromSuperview()
-            self?.finishConsumablePurchase()
+            self?.finishConsumablePurchase(coins: coins)
         }
     }
 
@@ -406,8 +407,8 @@ final class RechargeViewController: UIViewController {
         return coinView
     }
 
-    private func finishConsumablePurchase() {
-        coinBalance += 99
+    private func finishConsumablePurchase(coins: Int) {
+        coinBalance += coins
         UserDefaults.standard.set(coinBalance, forKey: StorageKey.coinBalance)
         balanceLabel.text = "\(coinBalance)"
 
@@ -435,7 +436,7 @@ final class RechargeViewController: UIViewController {
 extension RechargeViewController: UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
 
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        packageCount
+        coinPackages.count
     }
 
     func collectionView(
@@ -449,7 +450,8 @@ extension RechargeViewController: UICollectionViewDataSource, UICollectionViewDe
             return UICollectionViewCell()
         }
 
-        cell.configure(imageName: Asset.coinPackageCard)
+        let coinPackage = coinPackages[indexPath.item]
+        cell.configure(imageName: coinPackage.imageName)
         return cell
     }
 
@@ -460,7 +462,8 @@ extension RechargeViewController: UICollectionViewDataSource, UICollectionViewDe
         }
 
         Task {
-            await purchaseCoinPackage(from: cell.cardView)
+            let coinPackage = coinPackages[indexPath.item]
+            await purchaseCoinPackage(coinPackage, from: cell.cardView)
         }
     }
 
@@ -472,22 +475,6 @@ extension RechargeViewController: UICollectionViewDataSource, UICollectionViewDe
         let width = floor((collectionView.bounds.width - 40) / 3)
         let height = floor((collectionView.bounds.height - 40) / 3)
         return CGSize(width: width, height: height)
-    }
-
-    func collectionView(
-        _ collectionView: UICollectionView,
-        layout collectionViewLayout: UICollectionViewLayout,
-        minimumLineSpacingForSectionAt section: Int
-    ) -> CGFloat {
-        20
-    }
-
-    func collectionView(
-        _ collectionView: UICollectionView,
-        layout collectionViewLayout: UICollectionViewLayout,
-        minimumInteritemSpacingForSectionAt section: Int
-    ) -> CGFloat {
-        20
     }
 
 }

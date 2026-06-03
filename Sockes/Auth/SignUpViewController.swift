@@ -7,7 +7,7 @@
 
 import UIKit
 
-class SignUpViewController: UIViewController {
+class SignUpViewController: UIViewController, UITextFieldDelegate {
 
     private enum Asset {
         static let background = "Auth/login_background"
@@ -17,10 +17,22 @@ class SignUpViewController: UIViewController {
         static let passwordIcon = "Auth/login_password_icon"
     }
 
+    private let nameField = UITextField()
+    private let emailField = UITextField()
+    private let passwordField = UITextField()
+    private weak var activeTextField: UITextField?
+    private var currentKeyboardFrame: CGRect?
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
         buildSignUpPage()
+        setupKeyboardDismissal()
+        setupKeyboardObservers()
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
 
     private func buildSignUpPage() {
@@ -60,28 +72,34 @@ class SignUpViewController: UIViewController {
         subtitleLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(subtitleLabel)
 
-        let nameField = makeInputField(
+        configureInputField(
+            nameField,
             placeholder: "Please enter yourn name",
             imageName: Asset.nameIcon,
             keyboardType: .default,
             isSecure: false
         )
+        nameField.returnKeyType = .next
         view.addSubview(nameField)
 
-        let emailField = makeInputField(
+        configureInputField(
+            emailField,
             placeholder: "Please enter your email",
             imageName: Asset.emailIcon,
             keyboardType: .emailAddress,
             isSecure: false
         )
+        emailField.returnKeyType = .next
         view.addSubview(emailField)
 
-        let passwordField = makeInputField(
+        configureInputField(
+            passwordField,
             placeholder: "Please enter your Password",
             imageName: Asset.passwordIcon,
             keyboardType: .default,
             isSecure: true
         )
+        passwordField.returnKeyType = .done
         view.addSubview(passwordField)
 
         let signUpButton = UIButton(type: .system)
@@ -90,6 +108,7 @@ class SignUpViewController: UIViewController {
         signUpButton.tintColor = .white
         signUpButton.backgroundColor = UIColor(red: 0.07, green: 0.09, blue: 0.08, alpha: 1)
         signUpButton.layer.cornerRadius = 10
+        signUpButton.addTarget(self, action: #selector(signUp), for: .touchUpInside)
         signUpButton.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(signUpButton)
 
@@ -159,17 +178,20 @@ class SignUpViewController: UIViewController {
         ])
     }
 
-    private func makeInputField(
+    private func configureInputField(
+        _ field: UITextField,
         placeholder: String,
         imageName: String,
         keyboardType: UIKeyboardType,
         isSecure: Bool
-    ) -> UITextField {
-        let field = UITextField()
+    ) {
         field.borderStyle = .none
         field.backgroundColor = .white
         field.keyboardType = keyboardType
         field.isSecureTextEntry = isSecure
+        field.delegate = self
+        field.autocorrectionType = .no
+        field.autocapitalizationType = .none
         field.font = .systemFont(ofSize: 14, weight: .regular)
         field.textColor = .black
         field.attributedPlaceholder = NSAttributedString(
@@ -191,12 +213,148 @@ class SignUpViewController: UIViewController {
         iconContainer.addSubview(iconView)
         field.leftView = iconContainer
         field.leftViewMode = .always
+    }
 
-        return field
+    private func setupKeyboardDismissal() {
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
+        tapGesture.cancelsTouchesInView = false
+        view.addGestureRecognizer(tapGesture)
+    }
+
+    private func setupKeyboardObservers() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleKeyboardWillChangeFrame(_:)),
+            name: UIResponder.keyboardWillChangeFrameNotification,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleKeyboardWillHide(_:)),
+            name: UIResponder.keyboardWillHideNotification,
+            object: nil
+        )
+    }
+
+    @objc private func dismissKeyboard() {
+        view.endEditing(true)
+    }
+
+    @objc private func handleKeyboardWillChangeFrame(_ notification: Notification) {
+        guard let activeTextField,
+              let keyboardFrameValue = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue else {
+            return
+        }
+
+        let keyboardFrame = view.convert(keyboardFrameValue.cgRectValue, from: nil)
+        currentKeyboardFrame = keyboardFrame
+        updateKeyboardAvoidance(for: activeTextField, keyboardFrame: keyboardFrame, notification: notification)
+    }
+
+    @objc private func handleKeyboardWillHide(_ notification: Notification) {
+        currentKeyboardFrame = nil
+        animateKeyboardAvoidance(offset: 0, notification: notification)
+    }
+
+    private func updateKeyboardAvoidance(
+        for textField: UITextField,
+        keyboardFrame: CGRect,
+        notification: Notification?
+    ) {
+        let fieldFrame = textField.convert(textField.bounds, to: view)
+        let overlap = max(0, fieldFrame.maxY + 24 - keyboardFrame.minY)
+        animateKeyboardAvoidance(offset: -overlap, notification: notification)
+    }
+
+    private func animateKeyboardAvoidance(offset: CGFloat, notification: Notification?) {
+        let duration = notification?.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? TimeInterval ?? 0.25
+        let curveRawValue = notification?.userInfo?[UIResponder.keyboardAnimationCurveUserInfoKey] as? UInt ?? 7
+        let options = UIView.AnimationOptions(rawValue: curveRawValue << 16)
+
+        UIView.animate(withDuration: duration, delay: 0, options: options) {
+            self.view.transform = CGAffineTransform(translationX: 0, y: offset)
+        }
+    }
+
+    func textFieldDidBeginEditing(_ textField: UITextField) {
+        activeTextField = textField
+
+        if let currentKeyboardFrame {
+            updateKeyboardAvoidance(for: textField, keyboardFrame: currentKeyboardFrame, notification: nil)
+        }
+    }
+
+    func textFieldDidEndEditing(_ textField: UITextField) {
+        if activeTextField === textField {
+            activeTextField = nil
+        }
+    }
+
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        switch textField {
+        case nameField:
+            emailField.becomeFirstResponder()
+        case emailField:
+            passwordField.becomeFirstResponder()
+        default:
+            textField.resignFirstResponder()
+        }
+
+        return true
     }
 
     @objc private func backToLoginPage() {
         dismiss(animated: true)
+    }
+
+    @objc private func signUp() {
+        guard validateSignUpInput() else { return }
+
+        let email = emailField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        AuthSession.markLoggedIn(email: email)
+
+        let tabBarController = MainTabBarController()
+        view.window?.rootViewController = tabBarController
+        view.window?.makeKeyAndVisible()
+    }
+
+    private func validateSignUpInput() -> Bool {
+        let name = nameField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let email = emailField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let password = passwordField.text ?? ""
+
+        guard !name.isEmpty else {
+            showSignUpMessage("Please enter your name.")
+            return false
+        }
+
+        guard !email.isEmpty else {
+            showSignUpMessage("Please enter your email.")
+            return false
+        }
+
+        guard isValidEmail(email) else {
+            showSignUpMessage("Please enter a valid email.")
+            return false
+        }
+
+        guard !password.isEmpty else {
+            showSignUpMessage("Please enter your password.")
+            return false
+        }
+
+        return true
+    }
+
+    private func isValidEmail(_ email: String) -> Bool {
+        let pattern = #"^[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"#
+        return NSPredicate(format: "SELF MATCHES %@", pattern).evaluate(with: email)
+    }
+
+    private func showSignUpMessage(_ message: String) {
+        let alertController = UIAlertController(title: nil, message: message, preferredStyle: .alert)
+        alertController.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alertController, animated: true)
     }
 
 }

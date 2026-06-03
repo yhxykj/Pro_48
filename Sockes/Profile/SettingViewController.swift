@@ -123,7 +123,14 @@ final class SettingViewController: UIViewController {
     }
 
     private func action(for title: String) -> Selector? {
-        title == "Blacklist" ? #selector(showBlacklistPage) : nil
+        switch title {
+        case "Blacklist":
+            return #selector(showBlacklistPage)
+        case "Log out":
+            return #selector(logOut)
+        default:
+            return nil
+        }
     }
 
     @objc private func closePage() {
@@ -134,6 +141,14 @@ final class SettingViewController: UIViewController {
         let viewController = ProfileUserListViewController(mode: .blacklist)
         viewController.modalPresentationStyle = .fullScreen
         present(viewController, animated: true)
+    }
+
+    @objc private func logOut() {
+        AuthSession.markLoggedOut()
+
+        let loginViewController = LoginViewController()
+        view.window?.rootViewController = loginViewController
+        view.window?.makeKeyAndVisible()
     }
 
 }

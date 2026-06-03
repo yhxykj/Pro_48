@@ -2,30 +2,31 @@
 
 import UIKit
 
-struct ChatMessage {
+struct ChatMessage: Codable {
     let text: String
     let isMine: Bool
 }
 
-final class ChatViewController: UIViewController {
+final class ChatViewController: UIViewController, UITextFieldDelegate {
 
     private enum Asset {
         static let backIcon = "Common/common_back_icon"
         static let sendButton = "Chat/chat_send_button"
     }
 
-    private let messages: [ChatMessage] = [
-        ChatMessage(text: "Tell me what's bothering you, I'll\nhelp you relieve it.", isMine: false),
-        ChatMessage(text: "I haven't been working very\nsmoothly lately, and I don't know\nwhat to do next", isMine: true),
-        ChatMessage(text: "You can try submitting more\nresumes and exploring variou\nsopportunities", isMine: false)
-    ]
+    private enum StorageKey {
+        static let messagePrefix = "chat.ai.messages"
+    }
 
+    private var messages: [ChatMessage] = []
     private let tableView = UITableView(frame: .zero, style: .plain)
     private let inputBar = UIView()
+    private let inputTextField = UITextField()
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        loadMessages()
         setupHeader()
         setupTableView()
         setupInputBar()
@@ -115,27 +116,29 @@ final class ChatViewController: UIViewController {
         inputBar.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(inputBar)
 
-        let textField = UITextField()
-        textField.borderStyle = .none
-        textField.backgroundColor = UIColor(red: 0.97, green: 0.97, blue: 0.97, alpha: 1)
-        textField.font = .systemFont(ofSize: 14, weight: .regular)
-        textField.textColor = .black
-        textField.attributedPlaceholder = NSAttributedString(
+        inputTextField.borderStyle = .none
+        inputTextField.backgroundColor = UIColor(red: 0.97, green: 0.97, blue: 0.97, alpha: 1)
+        inputTextField.font = .systemFont(ofSize: 14, weight: .regular)
+        inputTextField.textColor = .black
+        inputTextField.returnKeyType = .send
+        inputTextField.delegate = self
+        inputTextField.attributedPlaceholder = NSAttributedString(
             string: "Please input what you want to say",
             attributes: [
                 .foregroundColor: UIColor(red: 0.86, green: 0.86, blue: 0.86, alpha: 1),
                 .font: UIFont.systemFont(ofSize: 14, weight: .regular)
             ]
         )
-        textField.layer.cornerRadius = 6
-        textField.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 18, height: 1))
-        textField.leftViewMode = .always
-        textField.translatesAutoresizingMaskIntoConstraints = false
-        inputBar.addSubview(textField)
+        inputTextField.layer.cornerRadius = 6
+        inputTextField.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 18, height: 1))
+        inputTextField.leftViewMode = .always
+        inputTextField.translatesAutoresizingMaskIntoConstraints = false
+        inputBar.addSubview(inputTextField)
 
         let sendButton = UIButton(type: .custom)
         sendButton.setImage(UIImage(named: Asset.sendButton), for: .normal)
         sendButton.imageView?.contentMode = .scaleAspectFit
+        sendButton.addTarget(self, action: #selector(sendMessage), for: .touchUpInside)
         sendButton.translatesAutoresizingMaskIntoConstraints = false
         inputBar.addSubview(sendButton)
 
@@ -145,10 +148,10 @@ final class ChatViewController: UIViewController {
             inputBar.bottomAnchor.constraint(equalTo: view.keyboardLayoutGuide.bottomAnchor, constant: 0),
             inputBar.heightAnchor.constraint(equalToConstant: 83),
 
-            textField.leadingAnchor.constraint(equalTo: inputBar.leadingAnchor, constant: 15),
-            textField.topAnchor.constraint(equalTo: inputBar.topAnchor, constant: 11),
-            textField.trailingAnchor.constraint(equalTo: sendButton.leadingAnchor, constant: -15),
-            textField.heightAnchor.constraint(equalToConstant: 40),
+            inputTextField.leadingAnchor.constraint(equalTo: inputBar.leadingAnchor, constant: 15),
+            inputTextField.topAnchor.constraint(equalTo: inputBar.topAnchor, constant: 11),
+            inputTextField.trailingAnchor.constraint(equalTo: sendButton.leadingAnchor, constant: -15),
+            inputTextField.heightAnchor.constraint(equalToConstant: 40),
 
             sendButton.trailingAnchor.constraint(equalTo: inputBar.trailingAnchor, constant: -15),
             sendButton.topAnchor.constraint(equalTo: inputBar.topAnchor, constant: 11),
@@ -199,6 +202,59 @@ final class ChatViewController: UIViewController {
 
     @objc private func hideKeyboard() {
         view.endEditing(true)
+    }
+
+    @objc private func sendMessage() {
+        let text = inputTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        guard !text.isEmpty else { return }
+
+        inputTextField.text = nil
+        appendMessage(ChatMessage(text: text, isMine: true))
+    }
+
+    private func appendMessage(_ message: ChatMessage) {
+        messages.append(message)
+        saveMessages()
+
+        let indexPath = IndexPath(row: messages.count - 1, section: 0)
+        tableView.performBatchUpdates {
+            tableView.insertRows(at: [indexPath], with: .fade)
+        } completion: { [weak self] _ in
+            self?.scrollToLatestMessage()
+        }
+    }
+
+    private func loadMessages() {
+        guard let data = UserDefaults.standard.data(forKey: messageStorageKey),
+              let savedMessages = try? JSONDecoder().decode([ChatMessage].self, from: data) else {
+            messages = []
+            return
+        }
+
+        messages = savedMessages
+    }
+
+    private func saveMessages() {
+        guard let data = try? JSONEncoder().encode(messages) else { return }
+
+        UserDefaults.standard.set(data, forKey: messageStorageKey)
+    }
+
+    private var messageStorageKey: String {
+        let email = AuthSession.currentEmail ?? "guest"
+        return "\(StorageKey.messagePrefix).\(email)"
+    }
+
+    private func scrollToLatestMessage() {
+        guard !messages.isEmpty else { return }
+
+        let indexPath = IndexPath(row: messages.count - 1, section: 0)
+        tableView.scrollToRow(at: indexPath, at: .bottom, animated: true)
+    }
+
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        sendMessage()
+        return true
     }
 
     @objc private func keyboardFrameDidChange(_ notification: Notification) {

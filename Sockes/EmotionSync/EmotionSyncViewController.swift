@@ -11,8 +11,9 @@ struct EmotionPost {
     let name: String
     let time: String
     let content: String
-    let avatarColor: UIColor
-    let photoColors: [UIColor]
+    let avatarImageName: String
+    let photoImageNames: [String]
+    let profileVideoFileName: String
 }
 
 final class EmotionSyncViewController: UIViewController {
@@ -30,21 +31,74 @@ final class EmotionSyncViewController: UIViewController {
             name: "Simo",
             time: "1 min ago",
             content: "Love is not a matter of counting the days. It's making the days count.",
-            avatarColor: UIColor(red: 0.98, green: 0.82, blue: 0.55, alpha: 1),
-            photoColors: [
-                UIColor(red: 0.74, green: 0.88, blue: 0.68, alpha: 1),
-                UIColor(red: 0.72, green: 0.82, blue: 0.95, alpha: 1)
-            ]
+            avatarImageName: "EmotionSync/PostAvatars/emotion_post_avatar_simo",
+            photoImageNames: [
+                "EmotionSync/PostPhotos/emotion_post_photo_sunset_lake",
+                "EmotionSync/PostPhotos/emotion_post_photo_window"
+            ],
+            profileVideoFileName: "profile_male_video_simo"
         ),
         EmotionPost(
             name: "Arlan",
             time: "10 min ago",
             content: "Don't be discouraged; it's often the last key in the bunch that opens the lock.",
-            avatarColor: UIColor(red: 0.84, green: 0.66, blue: 0.90, alpha: 1),
-            photoColors: [
-                UIColor(red: 0.80, green: 0.90, blue: 0.72, alpha: 1),
-                UIColor(red: 0.96, green: 0.76, blue: 0.82, alpha: 1)
-            ]
+            avatarImageName: "EmotionSync/PostAvatars/emotion_post_avatar_arlan",
+            photoImageNames: [
+                "EmotionSync/PostPhotos/emotion_post_photo_coast",
+                "EmotionSync/PostPhotos/emotion_post_photo_warm_light"
+            ],
+            profileVideoFileName: "profile_female_video_arlan"
+        ),
+        EmotionPost(
+            name: "Williams",
+            time: "18 min ago",
+            content: "Life is like a box of chocolates, you never know what you're gonna get.",
+            avatarImageName: "EmotionSync/PostAvatars/emotion_post_avatar_williams",
+            photoImageNames: [
+                "EmotionSync/PostPhotos/emotion_post_photo_city_sky",
+                "EmotionSync/PostPhotos/emotion_post_photo_lamp"
+            ],
+            profileVideoFileName: "profile_male_video_williams"
+        ),
+        EmotionPost(
+            name: "Perla",
+            time: "28 min ago",
+            content: "Let the evening light carry away the heavy thoughts for a while.",
+            avatarImageName: "EmotionSync/PostAvatars/emotion_post_avatar_perla",
+            photoImageNames: [
+                "EmotionSync/PostPhotos/emotion_post_photo_evening_street"
+            ],
+            profileVideoFileName: "profile_female_video_perla"
+        ),
+        EmotionPost(
+            name: "Nue",
+            time: "36 min ago",
+            content: "Some quiet moments are also gentle answers from the day.",
+            avatarImageName: "EmotionSync/PostAvatars/emotion_post_avatar_nue",
+            photoImageNames: [
+                "EmotionSync/PostPhotos/emotion_post_photo_blur_light"
+            ],
+            profileVideoFileName: "profile_male_video_nue"
+        ),
+        EmotionPost(
+            name: "Psai",
+            time: "45 min ago",
+            content: "A small flower can still make the whole road feel softer.",
+            avatarImageName: "EmotionSync/PostAvatars/emotion_post_avatar_psai",
+            photoImageNames: [
+                "EmotionSync/PostPhotos/emotion_post_photo_flowers"
+            ],
+            profileVideoFileName: "profile_male_video_psai"
+        ),
+        EmotionPost(
+            name: "Kari",
+            time: "52 min ago",
+            content: "Rain on the window sounds like the city taking a deep breath.",
+            avatarImageName: "EmotionSync/PostAvatars/emotion_post_avatar_kari",
+            photoImageNames: [
+                "EmotionSync/PostPhotos/emotion_post_photo_rain_window"
+            ],
+            profileVideoFileName: "profile_female_video_kari"
         )
     ]
 
@@ -53,6 +107,12 @@ final class EmotionSyncViewController: UIViewController {
 
         setupBackground()
         setupTopContent()
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+
+        tableView.reloadData()
     }
 
     private func setupBackground() {
@@ -131,7 +191,7 @@ final class EmotionSyncViewController: UIViewController {
 extension EmotionSyncViewController: UITableViewDataSource {
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        posts.count
+        visiblePosts.count
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -139,16 +199,31 @@ extension EmotionSyncViewController: UITableViewDataSource {
             withIdentifier: EmotionPostCell.reuseIdentifier,
             for: indexPath
         ) as? EmotionPostCell
-        cell?.configure(with: posts[indexPath.row])
+        let post = visiblePosts[indexPath.row]
+        cell?.configure(with: post)
         cell?.onAvatarTap = { [weak self] in
             guard let self else { return }
+            guard !UserBlockStore.isBlocked(name: post.name) else {
+                self.showBlockedUserAlert()
+                return
+            }
 
-            let viewController = EmotionUserProfileViewController(post: self.posts[indexPath.row])
+            let viewController = EmotionUserProfileViewController(post: post)
             viewController.modalPresentationStyle = .fullScreen
             self.present(viewController, animated: true)
         }
         cell?.onAlertTap = { [weak self] sourceView in
-            self?.showEmotionReportMenu(from: sourceView)
+            self?.showReportMenu(from: sourceView, for: post)
+        }
+        cell?.onVideoTap = { [weak self] in
+            guard let self else { return }
+
+            self.showVideoCallPage(for: post)
+        }
+        cell?.onMailTap = { [weak self] in
+            guard let self else { return }
+
+            self.showMessageChatPage(for: post)
         }
         return cell ?? UITableViewCell()
     }
@@ -160,9 +235,87 @@ extension EmotionSyncViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
 
-        let viewController = EmotionPostDetailViewController(post: posts[indexPath.row])
+        let post = visiblePosts[indexPath.row]
+        guard !UserBlockStore.isBlocked(name: post.name) else {
+            showBlockedUserAlert()
+            return
+        }
+
+        let viewController = EmotionPostDetailViewController(post: post)
         viewController.modalPresentationStyle = .fullScreen
         present(viewController, animated: true)
+    }
+
+    private func showVideoCallPage(for post: EmotionPost) {
+        guard !UserBlockStore.isBlocked(name: post.name) else {
+            showBlockedUserAlert()
+            return
+        }
+
+        let viewController = MessageVideoCallViewController(friend: makeMessageFriend(from: post))
+        viewController.modalPresentationStyle = .fullScreen
+        present(viewController, animated: true)
+    }
+
+    private func showMessageChatPage(for post: EmotionPost) {
+        guard !UserBlockStore.isBlocked(name: post.name) else {
+            showBlockedUserAlert()
+            return
+        }
+
+        let viewController = MessageChatViewController(
+            friend: makeMessageFriend(from: post),
+            returnDestination: .emotionSync
+        )
+        viewController.modalPresentationStyle = .fullScreen
+        present(viewController, animated: true)
+    }
+
+    private func makeMessageFriend(from post: EmotionPost) -> MessageFriend {
+        MessageFriend(
+            name: post.name,
+            message: post.content,
+            avatarColor: UIColor(red: 0.76, green: 0.87, blue: 1.00, alpha: 1),
+            avatarImageName: post.avatarImageName,
+            profileVideoFileName: post.profileVideoFileName
+        )
+    }
+
+}
+
+private extension EmotionSyncViewController {
+
+    var visiblePosts: [EmotionPost] {
+        posts.filter { !UserBlockStore.isBlocked(name: $0.name) }
+    }
+
+    func showReportMenu(from sourceView: UIView, for post: EmotionPost) {
+        showEmotionReportMenu(
+            from: sourceView,
+            onReport: { [weak self] in
+                self?.showReportReceivedAlert()
+            },
+            onBlock: { [weak self] in
+                guard let self else { return }
+
+                self.showBlockConfirmation(for: post.blockedUser) { [weak self] in
+                    self?.tableView.reloadData()
+                }
+            }
+        )
+    }
+
+}
+
+extension EmotionPost {
+
+    var blockedUser: BlockedUser {
+        BlockedUser(
+            name: name,
+            message: content,
+            avatarImageName: avatarImageName,
+            profileVideoFileName: profileVideoFileName
+        )
     }
 
 }

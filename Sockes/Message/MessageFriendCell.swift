@@ -11,7 +11,7 @@ final class MessageFriendCell: UITableViewCell {
 
     static let reuseIdentifier = "MessageFriendCell"
 
-    private let avatarView = UIView()
+    private let avatarView = UIImageView()
     private let avatarLabel = UILabel()
     private let nameLabel = UILabel()
     private let messageLabel = UILabel()
@@ -28,6 +28,8 @@ final class MessageFriendCell: UITableViewCell {
 
     func configure(with friend: MessageFriend) {
         avatarView.backgroundColor = friend.avatarColor
+        avatarView.image = friend.avatarImageName.flatMap { UIImage(named: $0) }
+        avatarLabel.isHidden = avatarView.image != nil
         avatarLabel.text = String(friend.name.prefix(1))
         nameLabel.text = friend.name
         messageLabel.text = friend.message
@@ -49,6 +51,7 @@ final class MessageFriendCell: UITableViewCell {
         avatarView.layer.borderWidth = 1
         avatarView.layer.borderColor = UIColor(red: 0.41, green: 0.65, blue: 1.00, alpha: 1).cgColor
         avatarView.layer.masksToBounds = true
+        avatarView.contentMode = .scaleAspectFill
         avatarView.translatesAutoresizingMaskIntoConstraints = false
         cardView.addSubview(avatarView)
 

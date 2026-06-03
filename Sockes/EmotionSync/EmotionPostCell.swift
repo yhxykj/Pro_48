@@ -12,6 +12,8 @@ final class EmotionPostCell: UITableViewCell {
     static let reuseIdentifier = "EmotionPostCell"
     var onAvatarTap: (() -> Void)?
     var onAlertTap: ((UIView) -> Void)?
+    var onVideoTap: (() -> Void)?
+    var onMailTap: (() -> Void)?
 
     private enum Asset {
         static let cardBackground = "EmotionSync/emotion_sync_post_card_background"
@@ -23,8 +25,7 @@ final class EmotionPostCell: UITableViewCell {
 
     private let cardView = UIView()
     private let cardBackgroundView = UIImageView()
-    private let avatarContainerView = UIView()
-    private let avatarInitialLabel = UILabel()
+    private let avatarImageView = UIImageView()
     private let avatarRingView = UIImageView()
     private let nameLabel = UILabel()
     private let timeLabel = UILabel()
@@ -53,17 +54,18 @@ final class EmotionPostCell: UITableViewCell {
         }
         onAvatarTap = nil
         onAlertTap = nil
+        onVideoTap = nil
+        onMailTap = nil
     }
 
     func configure(with post: EmotionPost) {
         nameLabel.text = post.name
         timeLabel.text = post.time
         contentLabel.text = post.content
-        avatarContainerView.backgroundColor = post.avatarColor
-        avatarInitialLabel.text = String(post.name.prefix(1))
+        avatarImageView.image = UIImage(named: post.avatarImageName)
 
-        post.photoColors.forEach { color in
-            photoStackView.addArrangedSubview(makePhotoView(color: color))
+        post.photoImageNames.prefix(2).forEach { imageName in
+            photoStackView.addArrangedSubview(makePhotoView(imageName: imageName))
         }
     }
 
@@ -87,18 +89,14 @@ final class EmotionPostCell: UITableViewCell {
         cardBackgroundView.translatesAutoresizingMaskIntoConstraints = false
         cardView.addSubview(cardBackgroundView)
 
-        avatarContainerView.layer.cornerRadius = 26
-        avatarContainerView.clipsToBounds = true
-        avatarContainerView.isUserInteractionEnabled = true
-        avatarContainerView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleAvatarTap)))
-        avatarContainerView.translatesAutoresizingMaskIntoConstraints = false
-        cardView.addSubview(avatarContainerView)
-
-        avatarInitialLabel.font = .systemFont(ofSize: 24, weight: .bold)
-        avatarInitialLabel.textColor = .white
-        avatarInitialLabel.textAlignment = .center
-        avatarInitialLabel.translatesAutoresizingMaskIntoConstraints = false
-        avatarContainerView.addSubview(avatarInitialLabel)
+        avatarImageView.contentMode = .scaleAspectFill
+        avatarImageView.backgroundColor = UIColor(red: 0.92, green: 0.95, blue: 1.00, alpha: 1)
+        avatarImageView.layer.cornerRadius = 26
+        avatarImageView.clipsToBounds = true
+        avatarImageView.isUserInteractionEnabled = true
+        avatarImageView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleAvatarTap)))
+        avatarImageView.translatesAutoresizingMaskIntoConstraints = false
+        cardView.addSubview(avatarImageView)
 
         avatarRingView.image = UIImage(named: Asset.avatarRing)
         avatarRingView.contentMode = .scaleAspectFit
@@ -124,10 +122,12 @@ final class EmotionPostCell: UITableViewCell {
         cardView.addSubview(contentLabel)
 
         videoButton.setImage(UIImage(named: Asset.videoButton), for: .normal)
+        videoButton.addTarget(self, action: #selector(handleVideoTap), for: .touchUpInside)
         videoButton.translatesAutoresizingMaskIntoConstraints = false
         cardView.addSubview(videoButton)
 
         mailButton.setImage(UIImage(named: Asset.mailButton), for: .normal)
+        mailButton.addTarget(self, action: #selector(handleMailTap), for: .touchUpInside)
         mailButton.translatesAutoresizingMaskIntoConstraints = false
         cardView.addSubview(mailButton)
 
@@ -154,16 +154,13 @@ final class EmotionPostCell: UITableViewCell {
             cardBackgroundView.trailingAnchor.constraint(equalTo: cardView.trailingAnchor),
             cardBackgroundView.bottomAnchor.constraint(equalTo: cardView.bottomAnchor),
 
-            avatarContainerView.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 28),
-            avatarContainerView.topAnchor.constraint(equalTo: cardView.topAnchor, constant: 25),
-            avatarContainerView.widthAnchor.constraint(equalToConstant: 52),
-            avatarContainerView.heightAnchor.constraint(equalToConstant: 52),
+            avatarImageView.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 28),
+            avatarImageView.topAnchor.constraint(equalTo: cardView.topAnchor, constant: 25),
+            avatarImageView.widthAnchor.constraint(equalToConstant: 52),
+            avatarImageView.heightAnchor.constraint(equalToConstant: 52),
 
-            avatarInitialLabel.centerXAnchor.constraint(equalTo: avatarContainerView.centerXAnchor),
-            avatarInitialLabel.centerYAnchor.constraint(equalTo: avatarContainerView.centerYAnchor),
-
-            avatarRingView.centerXAnchor.constraint(equalTo: avatarContainerView.centerXAnchor),
-            avatarRingView.centerYAnchor.constraint(equalTo: avatarContainerView.centerYAnchor),
+            avatarRingView.centerXAnchor.constraint(equalTo: avatarImageView.centerXAnchor),
+            avatarRingView.centerYAnchor.constraint(equalTo: avatarImageView.centerYAnchor),
             avatarRingView.widthAnchor.constraint(equalToConstant: 70),
             avatarRingView.heightAnchor.constraint(equalToConstant: 70),
 
@@ -198,28 +195,19 @@ final class EmotionPostCell: UITableViewCell {
         ])
     }
 
-    private func makePhotoView(color: UIColor) -> UIView {
-        let view = UIView()
-        view.backgroundColor = color
-        view.layer.cornerRadius = 4
-        view.clipsToBounds = true
-        view.translatesAutoresizingMaskIntoConstraints = false
-
-        let label = UILabel()
-        label.text = "AI"
-        label.font = .systemFont(ofSize: 22, weight: .bold)
-        label.textColor = UIColor.white.withAlphaComponent(0.82)
-        label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(label)
+    private func makePhotoView(imageName: String) -> UIImageView {
+        let imageView = UIImageView(image: UIImage(named: imageName))
+        imageView.contentMode = .scaleAspectFill
+        imageView.backgroundColor = UIColor(red: 0.92, green: 0.95, blue: 1.00, alpha: 1)
+        imageView.layer.cornerRadius = 4
+        imageView.clipsToBounds = true
+        imageView.translatesAutoresizingMaskIntoConstraints = false
 
         NSLayoutConstraint.activate([
-            view.widthAnchor.constraint(equalToConstant: 84),
-            label.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            label.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+            imageView.widthAnchor.constraint(equalToConstant: 84)
         ])
 
-        return view
+        return imageView
     }
 
     @objc private func handleAvatarTap() {
@@ -228,6 +216,14 @@ final class EmotionPostCell: UITableViewCell {
 
     @objc private func handleAlertTap() {
         onAlertTap?(alertImageView)
+    }
+
+    @objc private func handleVideoTap() {
+        onVideoTap?()
+    }
+
+    @objc private func handleMailTap() {
+        onMailTap?()
     }
 
 }

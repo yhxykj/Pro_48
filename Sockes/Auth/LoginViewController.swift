@@ -7,7 +7,7 @@
 
 import UIKit
 
-class LoginViewController: UIViewController {
+class LoginViewController: UIViewController, UITextFieldDelegate {
 
     private enum Asset {
         static let background = "Auth/login_background"
@@ -16,10 +16,19 @@ class LoginViewController: UIViewController {
         static let rememberSwitch = "Auth/login_remember_switch"
     }
 
+    private enum TestAccount {
+        static let email = "sockes333@gmail.com"
+        static let password = "333333"
+    }
+
+    private let emailField = UITextField()
+    private let passwordField = UITextField()
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
         buildLoginPage()
+        setupKeyboardDismissal()
     }
 
     private func buildLoginPage() {
@@ -52,20 +61,24 @@ class LoginViewController: UIViewController {
         subtitleLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(subtitleLabel)
 
-        let emailField = makeInputField(
+        configureInputField(
+            emailField,
             placeholder: "Please enter your email",
             imageName: Asset.emailIcon,
             keyboardType: .emailAddress,
             isSecure: false
         )
+        emailField.returnKeyType = .next
         view.addSubview(emailField)
 
-        let passwordField = makeInputField(
+        configureInputField(
+            passwordField,
             placeholder: "Please enter your Password",
             imageName: Asset.passwordIcon,
             keyboardType: .default,
             isSecure: true
         )
+        passwordField.returnKeyType = .done
         view.addSubview(passwordField)
 
         let rememberButton = UIButton(type: .custom)
@@ -80,13 +93,6 @@ class LoginViewController: UIViewController {
         rememberLabel.textColor = UIColor(red: 0.22, green: 0.22, blue: 0.22, alpha: 1)
         rememberLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(rememberLabel)
-
-        let forgotButton = UIButton(type: .system)
-        forgotButton.setTitle("Forgot password !", for: .normal)
-        forgotButton.titleLabel?.font = .systemFont(ofSize: 12, weight: .regular)
-        forgotButton.tintColor = UIColor(red: 1, green: 0.27, blue: 0.27, alpha: 1)
-        forgotButton.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(forgotButton)
 
         let loginButton = UIButton(type: .system)
         loginButton.setTitle("✦   Log in   ✦", for: .normal)
@@ -152,9 +158,6 @@ class LoginViewController: UIViewController {
             rememberLabel.leadingAnchor.constraint(equalTo: rememberButton.trailingAnchor, constant: 10),
             rememberLabel.centerYAnchor.constraint(equalTo: rememberButton.centerYAnchor),
 
-            forgotButton.trailingAnchor.constraint(equalTo: emailField.trailingAnchor),
-            forgotButton.centerYAnchor.constraint(equalTo: rememberButton.centerYAnchor),
-
             loginButton.leadingAnchor.constraint(equalTo: emailField.leadingAnchor),
             loginButton.trailingAnchor.constraint(equalTo: emailField.trailingAnchor),
             loginButton.topAnchor.constraint(equalTo: rememberButton.bottomAnchor, constant: 24),
@@ -165,17 +168,20 @@ class LoginViewController: UIViewController {
         ])
     }
 
-    private func makeInputField(
+    private func configureInputField(
+        _ field: UITextField,
         placeholder: String,
         imageName: String,
         keyboardType: UIKeyboardType,
         isSecure: Bool
-    ) -> UITextField {
-        let field = UITextField()
+    ) {
         field.borderStyle = .none
         field.backgroundColor = .white
         field.keyboardType = keyboardType
         field.isSecureTextEntry = isSecure
+        field.delegate = self
+        field.autocorrectionType = .no
+        field.autocapitalizationType = .none
         field.font = .systemFont(ofSize: 14, weight: .regular)
         field.textColor = .black
         field.attributedPlaceholder = NSAttributedString(
@@ -197,8 +203,26 @@ class LoginViewController: UIViewController {
         iconContainer.addSubview(iconView)
         field.leftView = iconContainer
         field.leftViewMode = .always
+    }
 
-        return field
+    private func setupKeyboardDismissal() {
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
+        tapGesture.cancelsTouchesInView = false
+        view.addGestureRecognizer(tapGesture)
+    }
+
+    @objc private func dismissKeyboard() {
+        view.endEditing(true)
+    }
+
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        if textField === emailField {
+            passwordField.becomeFirstResponder()
+        } else {
+            textField.resignFirstResponder()
+        }
+
+        return true
     }
 
     @objc private func showSignUpPage() {
@@ -208,9 +232,47 @@ class LoginViewController: UIViewController {
     }
 
     @objc private func showMainTabBar() {
+        guard validateLoginInput() else { return }
+
+        let email = emailField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        AuthSession.markLoggedIn(email: email)
+
         let tabBarController = MainTabBarController()
         view.window?.rootViewController = tabBarController
         view.window?.makeKeyAndVisible()
+    }
+
+    private func validateLoginInput() -> Bool {
+        let email = emailField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let password = passwordField.text ?? ""
+
+        guard !email.isEmpty else {
+            showLoginMessage("Please enter your email.")
+            return false
+        }
+
+        guard isValidEmail(email) else {
+            showLoginMessage("Please enter a valid email.")
+            return false
+        }
+
+        guard !password.isEmpty else {
+            showLoginMessage("Please enter your password.")
+            return false
+        }
+
+        return true
+    }
+
+    private func isValidEmail(_ email: String) -> Bool {
+        let pattern = #"^[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"#
+        return NSPredicate(format: "SELF MATCHES %@", pattern).evaluate(with: email)
+    }
+
+    private func showLoginMessage(_ message: String) {
+        let alertController = UIAlertController(title: nil, message: message, preferredStyle: .alert)
+        alertController.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alertController, animated: true)
     }
 
 }

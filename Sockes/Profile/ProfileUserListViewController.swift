@@ -16,6 +16,23 @@ enum ProfileUserListMode {
 struct ProfileListUser {
     let name: String
     let avatarColor: UIColor
+    let avatarImageName: String?
+    let message: String
+    let profileVideoFileName: String?
+
+    init(
+        name: String,
+        avatarColor: UIColor,
+        avatarImageName: String? = nil,
+        message: String = "Smart and handsome sunshine boy.",
+        profileVideoFileName: String? = nil
+    ) {
+        self.name = name
+        self.avatarColor = avatarColor
+        self.avatarImageName = avatarImageName
+        self.message = message
+        self.profileVideoFileName = profileVideoFileName
+    }
 }
 
 final class ProfileUserListViewController: UIViewController {
@@ -26,16 +43,9 @@ final class ProfileUserListViewController: UIViewController {
     }
 
     private let mode: ProfileUserListMode
-    private let users: [ProfileListUser] = [
-        ProfileListUser(name: "awanda", avatarColor: UIColor(red: 0.96, green: 0.75, blue: 0.42, alpha: 1)),
-        ProfileListUser(name: "Greer", avatarColor: UIColor(red: 0.92, green: 0.61, blue: 0.38, alpha: 1)),
-        ProfileListUser(name: "Mianon", avatarColor: UIColor(red: 0.72, green: 0.44, blue: 0.75, alpha: 1)),
-        ProfileListUser(name: "Arlan", avatarColor: UIColor(red: 0.56, green: 0.42, blue: 0.78, alpha: 1)),
-        ProfileListUser(name: "Perla", avatarColor: UIColor(red: 0.98, green: 0.67, blue: 0.48, alpha: 1)),
-        ProfileListUser(name: "Simo", avatarColor: UIColor(red: 0.72, green: 0.65, blue: 0.95, alpha: 1))
-    ]
 
     private let tableView = UITableView(frame: .zero, style: .plain)
+    private let emptyStateView = EmptyStateView()
 
     init(mode: ProfileUserListMode) {
         self.mode = mode
@@ -50,6 +60,13 @@ final class ProfileUserListViewController: UIViewController {
         super.viewDidLoad()
 
         setupContent()
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+
+        tableView.reloadData()
+        updateEmptyState()
     }
 
     private func setupContent() {
@@ -86,6 +103,9 @@ final class ProfileUserListViewController: UIViewController {
         tableView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(tableView)
 
+        emptyStateView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(emptyStateView)
+
         NSLayoutConstraint.activate([
             topBackgroundImageView.topAnchor.constraint(equalTo: view.topAnchor),
             topBackgroundImageView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -103,28 +123,50 @@ final class ProfileUserListViewController: UIViewController {
             tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 92),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+
+            emptyStateView.topAnchor.constraint(equalTo: tableView.topAnchor, constant: 24),
+            emptyStateView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            emptyStateView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            emptyStateView.heightAnchor.constraint(equalToConstant: 260)
         ])
+
+        updateEmptyState()
     }
 
     private func showChatPage(for user: ProfileListUser) {
+        guard !UserBlockStore.isBlocked(name: user.name) else {
+            showBlockedUserAlert()
+            return
+        }
+
         let viewController = MessageChatViewController(
             friend: MessageFriend(
                 name: user.name,
-                message: "Smart and handsome sunshine boy.",
-                avatarColor: user.avatarColor
-            )
+                message: user.message,
+                avatarColor: user.avatarColor,
+                avatarImageName: user.avatarImageName,
+                profileVideoFileName: user.profileVideoFileName
+            ),
+            returnDestination: .profile
         )
         viewController.modalPresentationStyle = .fullScreen
         present(viewController, animated: true)
     }
 
     private func showVideoCallPage(for user: ProfileListUser) {
+        guard !UserBlockStore.isBlocked(name: user.name) else {
+            showBlockedUserAlert()
+            return
+        }
+
         let viewController = MessageVideoCallViewController(
             friend: MessageFriend(
                 name: user.name,
-                message: "Smart and handsome sunshine boy.",
-                avatarColor: user.avatarColor
+                message: user.message,
+                avatarColor: user.avatarColor,
+                avatarImageName: user.avatarImageName,
+                profileVideoFileName: user.profileVideoFileName
             )
         )
         viewController.modalPresentationStyle = .fullScreen
@@ -144,6 +186,31 @@ final class ProfileUserListViewController: UIViewController {
         case .blacklist:
             return "Blacklist"
         }
+    }
+
+    private var users: [ProfileListUser] {
+        switch mode {
+        case .fans:
+            return ProfileSocialData.visibleFans
+        case .following:
+            return ProfileSocialData.visibleFollowing
+        case .blacklist:
+            return UserBlockStore.blockedUsers.map {
+                ProfileListUser(
+                    name: $0.name,
+                    avatarColor: UIColor(red: 0.76, green: 0.87, blue: 1.00, alpha: 1),
+                    avatarImageName: $0.avatarImageName,
+                    message: $0.message,
+                    profileVideoFileName: $0.profileVideoFileName
+                )
+            }
+        }
+    }
+
+    private func updateEmptyState() {
+        let isEmpty = users.isEmpty
+        tableView.isHidden = isEmpty
+        emptyStateView.isHidden = !isEmpty
     }
 
 }
@@ -170,6 +237,11 @@ extension ProfileUserListViewController: UITableViewDataSource, UITableViewDeleg
         }
         cell?.onMailTap = { [weak self] in
             self?.showChatPage(for: user)
+        }
+        cell?.onDeleteTap = { [weak self] in
+            UserBlockStore.unblock(name: user.name)
+            self?.tableView.reloadData()
+            self?.updateEmptyState()
         }
         return cell ?? UITableViewCell()
     }

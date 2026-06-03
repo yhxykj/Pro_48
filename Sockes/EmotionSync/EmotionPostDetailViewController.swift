@@ -221,22 +221,15 @@ final class EmotionPostDetailViewController: UIViewController {
         cardBackgroundView.translatesAutoresizingMaskIntoConstraints = false
         cardView.addSubview(cardBackgroundView)
 
-        let avatarView = UIView()
-        avatarView.backgroundColor = post.avatarColor
+        let avatarView = UIImageView(image: UIImage(named: post.avatarImageName))
+        avatarView.contentMode = .scaleAspectFill
+        avatarView.backgroundColor = UIColor(red: 0.92, green: 0.95, blue: 1.00, alpha: 1)
         avatarView.layer.cornerRadius = 26
         avatarView.clipsToBounds = true
         avatarView.isUserInteractionEnabled = true
         avatarView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(showUserProfilePage)))
         avatarView.translatesAutoresizingMaskIntoConstraints = false
         cardView.addSubview(avatarView)
-
-        let avatarInitialLabel = UILabel()
-        avatarInitialLabel.text = String(post.name.prefix(1))
-        avatarInitialLabel.font = .systemFont(ofSize: 24, weight: .bold)
-        avatarInitialLabel.textColor = .white
-        avatarInitialLabel.textAlignment = .center
-        avatarInitialLabel.translatesAutoresizingMaskIntoConstraints = false
-        avatarView.addSubview(avatarInitialLabel)
 
         let avatarRingView = UIImageView(image: UIImage(named: Asset.avatarRing))
         avatarRingView.contentMode = .scaleAspectFit
@@ -259,11 +252,13 @@ final class EmotionPostDetailViewController: UIViewController {
 
         let videoButton = UIButton(type: .custom)
         videoButton.setImage(UIImage(named: Asset.videoButton), for: .normal)
+        videoButton.addTarget(self, action: #selector(showVideoCallPage), for: .touchUpInside)
         videoButton.translatesAutoresizingMaskIntoConstraints = false
         cardView.addSubview(videoButton)
 
         let mailButton = UIButton(type: .custom)
         mailButton.setImage(UIImage(named: Asset.mailButton), for: .normal)
+        mailButton.addTarget(self, action: #selector(showMessageChatPage), for: .touchUpInside)
         mailButton.translatesAutoresizingMaskIntoConstraints = false
         cardView.addSubview(mailButton)
 
@@ -281,8 +276,8 @@ final class EmotionPostDetailViewController: UIViewController {
         photoStackView.translatesAutoresizingMaskIntoConstraints = false
         cardView.addSubview(photoStackView)
 
-        post.photoColors.prefix(2).forEach { color in
-            photoStackView.addArrangedSubview(makePostPhotoView(color: color))
+        post.photoImageNames.prefix(2).forEach { imageName in
+            photoStackView.addArrangedSubview(makePostPhotoView(imageName: imageName))
         }
 
         NSLayoutConstraint.activate([
@@ -295,9 +290,6 @@ final class EmotionPostDetailViewController: UIViewController {
             avatarView.topAnchor.constraint(equalTo: cardView.topAnchor, constant: 25),
             avatarView.widthAnchor.constraint(equalToConstant: 52),
             avatarView.heightAnchor.constraint(equalToConstant: 52),
-
-            avatarInitialLabel.centerXAnchor.constraint(equalTo: avatarView.centerXAnchor),
-            avatarInitialLabel.centerYAnchor.constraint(equalTo: avatarView.centerYAnchor),
 
             avatarRingView.centerXAnchor.constraint(equalTo: avatarView.centerXAnchor),
             avatarRingView.centerYAnchor.constraint(equalTo: avatarView.centerYAnchor),
@@ -332,28 +324,19 @@ final class EmotionPostDetailViewController: UIViewController {
         return cardView
     }
 
-    private func makePostPhotoView(color: UIColor) -> UIView {
-        let view = UIView()
-        view.backgroundColor = color
-        view.layer.cornerRadius = 4
-        view.clipsToBounds = true
-        view.translatesAutoresizingMaskIntoConstraints = false
-
-        let label = UILabel()
-        label.text = "AI"
-        label.font = .systemFont(ofSize: 24, weight: .bold)
-        label.textColor = UIColor.white.withAlphaComponent(0.82)
-        label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(label)
+    private func makePostPhotoView(imageName: String) -> UIImageView {
+        let imageView = UIImageView(image: UIImage(named: imageName))
+        imageView.contentMode = .scaleAspectFill
+        imageView.backgroundColor = UIColor(red: 0.92, green: 0.95, blue: 1.00, alpha: 1)
+        imageView.layer.cornerRadius = 4
+        imageView.clipsToBounds = true
+        imageView.translatesAutoresizingMaskIntoConstraints = false
 
         NSLayoutConstraint.activate([
-            view.widthAnchor.constraint(equalToConstant: 84),
-            label.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            label.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+            imageView.widthAnchor.constraint(equalToConstant: 84)
         ])
 
-        return view
+        return imageView
     }
 
     private func makeCommentAvatarView() -> UIView {
@@ -416,6 +399,10 @@ final class EmotionPostDetailViewController: UIViewController {
 
     @objc private func showUserProfilePage() {
         view.endEditing(true)
+        guard !UserBlockStore.isBlocked(name: post.name) else {
+            showBlockedUserAlert()
+            return
+        }
 
         let viewController = EmotionUserProfileViewController(post: post)
         viewController.modalPresentationStyle = .fullScreen
@@ -425,11 +412,36 @@ final class EmotionPostDetailViewController: UIViewController {
     @objc private func showTopReportMenu(_ gesture: UITapGestureRecognizer) {
         guard let sourceView = gesture.view else { return }
 
-        showEmotionReportMenu(from: sourceView)
+        showReportMenu(from: sourceView)
     }
 
     @objc private func showCommentReportMenu(_ sender: UIButton) {
-        showEmotionReportMenu(from: sender)
+        showReportMenu(from: sender)
+    }
+
+    @objc private func showVideoCallPage() {
+        guard !UserBlockStore.isBlocked(name: post.name) else {
+            showBlockedUserAlert()
+            return
+        }
+
+        let viewController = MessageVideoCallViewController(friend: makeMessageFriend())
+        viewController.modalPresentationStyle = .fullScreen
+        present(viewController, animated: true)
+    }
+
+    @objc private func showMessageChatPage() {
+        guard !UserBlockStore.isBlocked(name: post.name) else {
+            showBlockedUserAlert()
+            return
+        }
+
+        let viewController = MessageChatViewController(
+            friend: makeMessageFriend(),
+            returnDestination: .emotionSync
+        )
+        viewController.modalPresentationStyle = .fullScreen
+        present(viewController, animated: true)
     }
 
     @objc private func handleKeyboardFrameChange(_ notification: Notification) {
@@ -444,6 +456,36 @@ final class EmotionPostDetailViewController: UIViewController {
         UIView.animate(withDuration: duration, delay: 0, options: options) {
             self.commentBarView.transform = CGAffineTransform(translationX: 0, y: -bottomOffset)
         }
+    }
+
+}
+
+private extension EmotionPostDetailViewController {
+
+    func showReportMenu(from sourceView: UIView) {
+        showEmotionReportMenu(
+            from: sourceView,
+            onReport: { [weak self] in
+                self?.showReportReceivedAlert()
+            },
+            onBlock: { [weak self] in
+                guard let self else { return }
+
+                self.showBlockConfirmation(for: self.post.blockedUser) { [weak self] in
+                    self?.returnToPrimaryPage(.emotionSync)
+                }
+            }
+        )
+    }
+
+    func makeMessageFriend() -> MessageFriend {
+        MessageFriend(
+            name: post.name,
+            message: post.content,
+            avatarColor: UIColor(red: 0.76, green: 0.87, blue: 1.00, alpha: 1),
+            avatarImageName: post.avatarImageName,
+            profileVideoFileName: post.profileVideoFileName
+        )
     }
 
 }

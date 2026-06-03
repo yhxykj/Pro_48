@@ -21,7 +21,7 @@ final class ProfileUserListCell: UITableViewCell {
     var onMailTap: (() -> Void)?
     var onDeleteTap: (() -> Void)?
 
-    private let avatarView = UIView()
+    private let avatarView = UIImageView()
     private let avatarLabel = UILabel()
     private let nameLabel = UILabel()
     private let videoButton = UIButton(type: .custom)
@@ -48,7 +48,9 @@ final class ProfileUserListCell: UITableViewCell {
 
     func configure(with user: ProfileListUser, mode: ProfileUserListMode) {
         avatarView.backgroundColor = user.avatarColor
+        avatarView.image = user.avatarImageName.flatMap { UIImage(named: $0) }
         avatarLabel.text = String(user.name.prefix(1))
+        avatarLabel.isHidden = avatarView.image != nil
         nameLabel.text = user.name
 
         videoButton.isHidden = mode != .fans
@@ -65,6 +67,7 @@ final class ProfileUserListCell: UITableViewCell {
         avatarView.layer.borderWidth = 1
         avatarView.layer.borderColor = UIColor(red: 0.41, green: 0.65, blue: 1.00, alpha: 1).cgColor
         avatarView.layer.masksToBounds = true
+        avatarView.contentMode = .scaleAspectFill
         avatarView.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(avatarView)
 
@@ -74,7 +77,7 @@ final class ProfileUserListCell: UITableViewCell {
         avatarLabel.translatesAutoresizingMaskIntoConstraints = false
         avatarView.addSubview(avatarLabel)
 
-        nameLabel.font = .systemFont(ofSize: 12, weight: .semibold)
+        nameLabel.font = .systemFont(ofSize: 14, weight: .semibold)
         nameLabel.textColor = UIColor(red: 0.18, green: 0.18, blue: 0.20, alpha: 1)
         nameLabel.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(nameLabel)

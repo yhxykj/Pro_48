@@ -49,11 +49,19 @@ final class ProfileViewController: UIViewController {
     ]
 
     private let tableView = UITableView(frame: .zero, style: .plain)
+    private let fansCountLabel = UILabel()
+    private let followingCountLabel = UILabel()
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
         setupContent()
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+
+        updateSocialCounts()
     }
 
     private func setupContent() {
@@ -95,7 +103,7 @@ final class ProfileViewController: UIViewController {
         let fansLabel = makeStatsTitleLabel("Fans")
         view.addSubview(fansLabel)
 
-        let fansCountLabel = makeStatsCountLabel("125,145")
+        configureStatsCountLabel(fansCountLabel)
         view.addSubview(fansCountLabel)
         [fansLabel, fansCountLabel].forEach { label in
             label.isUserInteractionEnabled = true
@@ -105,7 +113,7 @@ final class ProfileViewController: UIViewController {
         let followingLabel = makeStatsTitleLabel("Following")
         view.addSubview(followingLabel)
 
-        let followingCountLabel = makeStatsCountLabel("125,145")
+        configureStatsCountLabel(followingCountLabel)
         view.addSubview(followingCountLabel)
         [followingLabel, followingCountLabel].forEach { label in
             label.isUserInteractionEnabled = true
@@ -190,6 +198,8 @@ final class ProfileViewController: UIViewController {
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
+
+        updateSocialCounts()
     }
 
     private func makeProfileAvatarView() -> UIView {
@@ -233,13 +243,19 @@ final class ProfileViewController: UIViewController {
         return label
     }
 
-    private func makeStatsCountLabel(_ text: String) -> UILabel {
-        let label = UILabel()
-        label.text = text
+    private func configureStatsCountLabel(_ label: UILabel) {
         label.font = .systemFont(ofSize: 20, weight: .semibold)
         label.textColor = UIColor(red: 0.12, green: 0.14, blue: 0.15, alpha: 1)
         label.translatesAutoresizingMaskIntoConstraints = false
-        return label
+    }
+
+    private func updateSocialCounts() {
+        fansCountLabel.text = formattedCount(ProfileSocialData.visibleFans.count)
+        followingCountLabel.text = formattedCount(ProfileSocialData.visibleFollowing.count)
+    }
+
+    private func formattedCount(_ count: Int) -> String {
+        NumberFormatter.localizedString(from: NSNumber(value: count), number: .decimal)
     }
 
     @objc private func showSettingPage() {

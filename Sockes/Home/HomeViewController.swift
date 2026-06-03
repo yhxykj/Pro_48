@@ -8,12 +8,13 @@
 import UIKit
 
 struct HomeCompanion {
+    let id: String
     let name: String
     let tags: [String]
     let message: String
-    let color: UIColor
+    let cellImageName: String
 }
-
+/// sockes333@gmail.com    333333
 final class HomeViewController: UIViewController {
 
     private enum Asset {
@@ -23,41 +24,50 @@ final class HomeViewController: UIViewController {
         static let unlockDialog = "Home/home_unlock_dialog"
     }
 
+    private enum StorageKey {
+        static let unlockedCompanionIDs = "home.unlockedCompanionIDs"
+    }
+
     private let tableView = UITableView(frame: .zero, style: .plain)
-    private var unlockedRows: Set<Int> = []
+    private var unlockedCompanionIDs: Set<String> = []
     private var pendingChatIndexPath: IndexPath?
     private weak var unlockOverlayView: UIView?
 
     private let companions: [HomeCompanion] = [
         HomeCompanion(
+            id: "liony",
             name: "Liony",
             tags: ["Gentle", "Listener"],
             message: "Can you tell me what's bothering\nyou and see if T can help you",
-            color: UIColor(red: 0.78, green: 0.88, blue: 1.00, alpha: 1)
+            cellImageName: "Home/home_companion_liony_cell"
         ),
         HomeCompanion(
+            id: "wendy",
             name: "Wendy",
             tags: ["Cute", "Friendly"],
             message: "Do you also like small animals\nthatheal the soul?",
-            color: UIColor(red: 1.00, green: 0.91, blue: 0.68, alpha: 1)
+            cellImageName: "Home/home_companion_wendy_cell"
         ),
         HomeCompanion(
+            id: "kair",
             name: "Kair",
             tags: ["Pure", "Loyalty"],
             message: "Do you want to take a walk alone\nbythe seaside in summer?",
-            color: UIColor(red: 0.83, green: 0.90, blue: 0.80, alpha: 1)
+            cellImageName: "Home/home_companion_kair_cell"
         ),
         HomeCompanion(
+            id: "kioet",
             name: "Kioet",
             tags: ["Kind", "Wonderful"],
             message: "The sunshine is perfect today,\nlet's share a little smile.",
-            color: UIColor(red: 1.00, green: 0.82, blue: 0.78, alpha: 1)
+            cellImageName: "Home/home_companion_kioet_cell"
         )
     ]
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        loadUnlockedCompanions()
         setupHeader()
         setupTableView()
     }
@@ -110,7 +120,7 @@ final class HomeViewController: UIViewController {
         view.addSubview(faceView)
 
         let recommendHeaderView = UIImageView(image: UIImage(named: Asset.recommendHeader))
-        recommendHeaderView.contentMode = .scaleAspectFit
+        recommendHeaderView.contentMode = .scaleToFill
         recommendHeaderView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(recommendHeaderView)
 
@@ -153,7 +163,6 @@ final class HomeViewController: UIViewController {
         tableView.contentInsetAdjustmentBehavior = .never
         tableView.dataSource = self
         tableView.delegate = self
-        tableView.rowHeight = 120
         tableView.register(HomeCompanionCell.self, forCellReuseIdentifier: HomeCompanionCell.reuseIdentifier)
         tableView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(tableView)
@@ -217,7 +226,7 @@ final class HomeViewController: UIViewController {
 
     @objc private func confirmUnlock() {
         if let pendingChatIndexPath {
-            unlockedRows.insert(pendingChatIndexPath.row)
+            unlockCompanion(at: pendingChatIndexPath)
         }
         closeUnlockDialog()
         showChatPage()
@@ -233,6 +242,21 @@ final class HomeViewController: UIViewController {
         let chatViewController = ChatViewController()
         chatViewController.modalPresentationStyle = .fullScreen
         present(chatViewController, animated: true)
+    }
+
+    private func loadUnlockedCompanions() {
+        let ids = UserDefaults.standard.stringArray(forKey: StorageKey.unlockedCompanionIDs) ?? []
+        unlockedCompanionIDs = Set(ids)
+    }
+
+    private func unlockCompanion(at indexPath: IndexPath) {
+        let companion = companions[indexPath.row]
+        unlockedCompanionIDs.insert(companion.id)
+        UserDefaults.standard.set(Array(unlockedCompanionIDs), forKey: StorageKey.unlockedCompanionIDs)
+    }
+
+    private func isCompanionUnlocked(at indexPath: IndexPath) -> Bool {
+        unlockedCompanionIDs.contains(companions[indexPath.row].id)
     }
 
 }
@@ -260,13 +284,14 @@ extension HomeViewController: UITableViewDataSource, UITableViewDelegate {
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 133
+        let imageHeight = tableView.bounds.width * 363 / 1011
+        return imageHeight + 13
     }
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
 
-        if unlockedRows.contains(indexPath.row) {
+        if isCompanionUnlocked(at: indexPath) {
             showChatPage()
         } else {
             pendingChatIndexPath = indexPath
