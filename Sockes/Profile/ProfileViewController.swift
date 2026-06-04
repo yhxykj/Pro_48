@@ -7,14 +7,6 @@
 
 import UIKit
 
-struct ProfilePost {
-    let name: String
-    let time: String
-    let content: String
-    let avatarColor: UIColor
-    let photoColors: [UIColor]
-}
-
 final class ProfileViewController: UIViewController {
 
     private enum Asset {
@@ -25,32 +17,13 @@ final class ProfileViewController: UIViewController {
         static let friendTitle = "Profile/profile_friend_title"
     }
 
-    private let posts: [ProfilePost] = [
-        ProfilePost(
-            name: "Simo",
-            time: "1 min ago",
-            content: "Love is not a matter of counting the days. It's making the\ndays count.",
-            avatarColor: UIColor(red: 0.98, green: 0.75, blue: 0.42, alpha: 1),
-            photoColors: [
-                UIColor(red: 0.74, green: 0.88, blue: 0.68, alpha: 1),
-                UIColor(red: 0.72, green: 0.82, blue: 0.95, alpha: 1)
-            ]
-        ),
-        ProfilePost(
-            name: "Simo",
-            time: "1 min ago",
-            content: "Love is not a matter of counting the days. It's making the\ndays count.",
-            avatarColor: UIColor(red: 0.98, green: 0.75, blue: 0.42, alpha: 1),
-            photoColors: [
-                UIColor(red: 0.74, green: 0.88, blue: 0.68, alpha: 1),
-                UIColor(red: 0.72, green: 0.82, blue: 0.95, alpha: 1)
-            ]
-        )
-    ]
-
     private let tableView = UITableView(frame: .zero, style: .plain)
     private let fansCountLabel = UILabel()
     private let followingCountLabel = UILabel()
+    private let profileNameLabel = UILabel()
+    private let profileAvatarView = UIImageView()
+    private let profileAvatarInitialLabel = UILabel()
+    private let sloganLabel = UILabel()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -62,6 +35,8 @@ final class ProfileViewController: UIViewController {
         super.viewWillAppear(animated)
 
         updateSocialCounts()
+        updateProfileInfo()
+        tableView.reloadData()
     }
 
     private func setupContent() {
@@ -79,15 +54,12 @@ final class ProfileViewController: UIViewController {
         settingsButton.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(settingsButton)
 
-        let nameLabel = UILabel()
-        nameLabel.text = "Williams"
+        let nameLabel = profileNameLabel
         nameLabel.font = .systemFont(ofSize: 28, weight: .bold)
         nameLabel.textColor = .black
         nameLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(nameLabel)
 
-        let sloganLabel = UILabel()
-        sloganLabel.text = "Love is not a matter of counting the\ndays. It'smaking the days count."
         sloganLabel.numberOfLines = 2
         sloganLabel.font = .systemFont(ofSize: 17, weight: .regular)
         sloganLabel.textColor = UIColor(red: 0.39, green: 0.39, blue: 0.40, alpha: 1)
@@ -95,6 +67,8 @@ final class ProfileViewController: UIViewController {
         view.addSubview(sloganLabel)
 
         let avatarView = makeProfileAvatarView()
+        avatarView.isUserInteractionEnabled = true
+        avatarView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(showEditProfilePage)))
         view.addSubview(avatarView)
 
         let editBadgeView = makeEditBadgeView()
@@ -200,19 +174,20 @@ final class ProfileViewController: UIViewController {
         ])
 
         updateSocialCounts()
+        updateProfileInfo()
     }
 
-    private func makeProfileAvatarView() -> UIView {
-        let avatarView = UIView()
+    private func makeProfileAvatarView() -> UIImageView {
+        let avatarView = profileAvatarView
         avatarView.backgroundColor = UIColor(red: 0.96, green: 0.75, blue: 0.42, alpha: 1)
+        avatarView.contentMode = .scaleAspectFill
         avatarView.layer.cornerRadius = 39
         avatarView.layer.borderWidth = 3
         avatarView.layer.borderColor = UIColor.white.cgColor
         avatarView.layer.masksToBounds = true
         avatarView.translatesAutoresizingMaskIntoConstraints = false
 
-        let label = UILabel()
-        label.text = "W"
+        let label = profileAvatarInitialLabel
         label.font = .systemFont(ofSize: 32, weight: .semibold)
         label.textColor = .white
         label.textAlignment = .center
@@ -227,11 +202,13 @@ final class ProfileViewController: UIViewController {
         return avatarView
     }
 
-    private func makeEditBadgeView() -> UIView {
-        let imageView = UIImageView(image: UIImage(named: Asset.avatarEditIcon))
-        imageView.contentMode = .scaleAspectFit
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        return imageView
+    private func makeEditBadgeView() -> UIButton {
+        let button = UIButton(type: .custom)
+        button.setImage(UIImage(named: Asset.avatarEditIcon), for: .normal)
+        button.imageView?.contentMode = .scaleAspectFit
+        button.addTarget(self, action: #selector(showEditProfilePage), for: .touchUpInside)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
     }
 
     private func makeStatsTitleLabel(_ text: String) -> UILabel {
@@ -254,12 +231,26 @@ final class ProfileViewController: UIViewController {
         followingCountLabel.text = formattedCount(ProfileSocialData.visibleFollowing.count)
     }
 
+    private func updateProfileInfo() {
+        profileNameLabel.text = ProfileStore.displayName
+        profileAvatarView.image = ProfileStore.avatarImage
+        profileAvatarInitialLabel.text = ProfileStore.avatarInitial()
+        profileAvatarInitialLabel.isHidden = profileAvatarView.image != nil
+        sloganLabel.text = ProfileStore.slogan
+    }
+
     private func formattedCount(_ count: Int) -> String {
         NumberFormatter.localizedString(from: NSNumber(value: count), number: .decimal)
     }
 
     @objc private func showSettingPage() {
         let viewController = SettingViewController()
+        viewController.modalPresentationStyle = .fullScreen
+        present(viewController, animated: true)
+    }
+
+    @objc private func showEditProfilePage() {
+        let viewController = EditProfileViewController()
         viewController.modalPresentationStyle = .fullScreen
         present(viewController, animated: true)
     }
@@ -282,23 +273,41 @@ final class ProfileViewController: UIViewController {
         present(viewController, animated: true)
     }
 
+    private func showDeletePostConfirmation(for post: ProfilePost) {
+        let alertController = UIAlertController(
+            title: "Delete this post?",
+            message: "This post will be removed from your profile.",
+            preferredStyle: .alert
+        )
+        alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alertController.addAction(UIAlertAction(title: "Delete", style: .destructive) { [weak self] _ in
+            ProfileStore.deletePost(post)
+            self?.tableView.reloadData()
+        })
+        present(alertController, animated: true)
+    }
+
 }
 
 extension ProfileViewController: UITableViewDataSource, UITableViewDelegate {
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        posts.count
+        ProfileStore.profilePosts.count
     }
 
     func tableView(
         _ tableView: UITableView,
         cellForRowAt indexPath: IndexPath
     ) -> UITableViewCell {
+        let post = ProfileStore.profilePosts[indexPath.row]
         let cell = tableView.dequeueReusableCell(
             withIdentifier: ProfilePostCell.reuseIdentifier,
             for: indexPath
         ) as? ProfilePostCell
-        cell?.configure(with: posts[indexPath.row])
+        cell?.configure(with: post)
+        cell?.onDeleteTap = { [weak self] in
+            self?.showDeletePostConfirmation(for: post)
+        }
         return cell ?? UITableViewCell()
     }
 

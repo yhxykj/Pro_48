@@ -14,6 +14,13 @@ final class SettingViewController: UIViewController {
         static let topBackground = "EmotionSync/ShareEmotions/share_emotions_background"
     }
 
+    private enum AgreementURL {
+        static let privacy = "https://example.com/privacy"
+        static let user = "https://example.com/terms"
+        static let contact = "https://example.com/contact"
+        static let community = "https://example.com/community-guidelines"
+    }
+
     private let items = [
         "Blacklist",
         "Privacy agreement",
@@ -126,8 +133,18 @@ final class SettingViewController: UIViewController {
         switch title {
         case "Blacklist":
             return #selector(showBlacklistPage)
+        case "Privacy agreement":
+            return #selector(showPrivacyAgreementPage)
+        case "User agreement":
+            return #selector(showUserAgreementPage)
+        case "Contact Us":
+            return #selector(showContactUsPage)
+        case "Community Guidelines":
+            return #selector(showCommunityGuidelinesPage)
         case "Log out":
             return #selector(logOut)
+        case "Deletion of account":
+            return #selector(deleteAccount)
         default:
             return nil
         }
@@ -143,9 +160,71 @@ final class SettingViewController: UIViewController {
         present(viewController, animated: true)
     }
 
-    @objc private func logOut() {
-        AuthSession.markLoggedOut()
+    @objc private func showPrivacyAgreementPage() {
+        showWebPage(title: "Privacy agreement", urlString: AgreementURL.privacy)
+    }
 
+    @objc private func showUserAgreementPage() {
+        showWebPage(title: "User agreement", urlString: AgreementURL.user)
+    }
+
+    @objc private func showContactUsPage() {
+        showWebPage(title: "Contact Us", urlString: AgreementURL.contact)
+    }
+
+    @objc private func showCommunityGuidelinesPage() {
+        showWebPage(title: "Community Guidelines", urlString: AgreementURL.community)
+    }
+
+    private func showWebPage(title: String, urlString: String) {
+        guard let url = URL(string: urlString) else {
+            showSimpleAlert(title: "Unable to open this page.")
+            return
+        }
+
+        let viewController = SettingWebViewController(title: title, url: url)
+        viewController.modalPresentationStyle = .fullScreen
+        present(viewController, animated: true)
+    }
+
+    @objc private func logOut() {
+        let alertController = UIAlertController(
+            title: "Log out?",
+            message: "Are you sure you want to log out of this account?",
+            preferredStyle: .alert
+        )
+        alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alertController.addAction(UIAlertAction(title: "Log out", style: .destructive) { [weak self] _ in
+            self?.confirmLogOut()
+        })
+        present(alertController, animated: true)
+    }
+
+    private func confirmLogOut() {
+        AuthSession.markLoggedOut()
+        showLoginPage()
+    }
+
+    @objc private func deleteAccount() {
+        let alertController = UIAlertController(
+            title: "Delete account?",
+            message: "This will clear your account data and cached content. This action cannot be undone.",
+            preferredStyle: .alert
+        )
+        alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alertController.addAction(UIAlertAction(title: "Delete", style: .destructive) { [weak self] _ in
+            self?.confirmDeleteAccount()
+        })
+        present(alertController, animated: true)
+    }
+
+    private func confirmDeleteAccount() {
+        AppCacheCleaner.clearAll { [weak self] in
+            self?.showLoginPage()
+        }
+    }
+
+    private func showLoginPage() {
         let loginViewController = LoginViewController()
         view.window?.rootViewController = loginViewController
         view.window?.makeKeyAndVisible()

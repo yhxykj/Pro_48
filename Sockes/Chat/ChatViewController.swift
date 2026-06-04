@@ -210,6 +210,15 @@ final class ChatViewController: UIViewController, UITextFieldDelegate {
 
         inputTextField.text = nil
         appendMessage(ChatMessage(text: text, isMine: true))
+        appendLocalAIReply(for: text)
+    }
+
+    private func appendLocalAIReply(for text: String) {
+        let replyText = LocalAIReplyProvider.reply(for: text, historyCount: messages.count)
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) { [weak self] in
+            self?.appendMessage(ChatMessage(text: replyText, isMine: false))
+        }
     }
 
     private func appendMessage(_ message: ChatMessage) {

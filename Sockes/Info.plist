@@ -2,12 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>NSCameraUsageDescription</key>
-	<string>Allow access to the camera for video calls and emotion posts.</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>Allow access to the microphone for voice during video calls.</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Allow access to the photo library to add a photo to your emotion post.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Fonts/LexendDeca-Regular.ttf</string>

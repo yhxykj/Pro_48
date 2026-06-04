@@ -17,12 +17,13 @@ final class ProfilePostCell: UITableViewCell {
         static let deleteIcon = "Profile/profile_post_delete_icon"
     }
 
-    private let avatarView = UIView()
+    private let avatarView = UIImageView()
     private let avatarLabel = UILabel()
     private let nameLabel = UILabel()
     private let timeLabel = UILabel()
     private let contentLabel = UILabel()
     private let photoStackView = UIStackView()
+    var onDeleteTap: (() -> Void)?
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -41,17 +42,20 @@ final class ProfilePostCell: UITableViewCell {
             photoStackView.removeArrangedSubview(view)
             view.removeFromSuperview()
         }
+        onDeleteTap = nil
     }
 
     func configure(with post: ProfilePost) {
         avatarView.backgroundColor = post.avatarColor
+        avatarView.image = post.avatarImage
         avatarLabel.text = String(post.name.prefix(1))
+        avatarLabel.isHidden = post.avatarImage != nil
         nameLabel.text = post.name
         timeLabel.text = post.time
         contentLabel.text = post.content
 
-        post.photoColors.prefix(2).forEach { color in
-            photoStackView.addArrangedSubview(makePostPhotoView(color: color))
+        post.photoImageNames.prefix(2).forEach { imageName in
+            photoStackView.addArrangedSubview(makePostPhotoView(imageName: imageName))
         }
     }
 
@@ -78,6 +82,7 @@ final class ProfilePostCell: UITableViewCell {
 
         avatarView.layer.cornerRadius = 26
         avatarView.layer.masksToBounds = true
+        avatarView.contentMode = .scaleAspectFill
         avatarView.translatesAutoresizingMaskIntoConstraints = false
         cardView.addSubview(avatarView)
 
@@ -105,6 +110,7 @@ final class ProfilePostCell: UITableViewCell {
         let deleteButton = UIButton(type: .custom)
         deleteButton.setImage(UIImage(named: Asset.deleteIcon), for: .normal)
         deleteButton.imageView?.contentMode = .scaleAspectFit
+        deleteButton.addTarget(self, action: #selector(deleteButtonTapped), for: .touchUpInside)
         deleteButton.translatesAutoresizingMaskIntoConstraints = false
         cardView.addSubview(deleteButton)
 
@@ -144,7 +150,7 @@ final class ProfilePostCell: UITableViewCell {
             avatarRingView.heightAnchor.constraint(equalToConstant: 70),
 
             nameLabel.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 95),
-            nameLabel.topAnchor.constraint(equalTo: cardView.topAnchor, constant: 31),
+            nameLabel.topAnchor.constraint(equalTo: cardView.topAnchor, constant: 34),
 
             timeLabel.leadingAnchor.constraint(equalTo: nameLabel.leadingAnchor),
             timeLabel.topAnchor.constraint(equalTo: nameLabel.bottomAnchor, constant: 4),
@@ -164,25 +170,20 @@ final class ProfilePostCell: UITableViewCell {
         ])
     }
 
-    private func makePostPhotoView(color: UIColor) -> UIView {
-        let view = UIView()
-        view.backgroundColor = color
+    @objc private func deleteButtonTapped() {
+        onDeleteTap?()
+    }
+
+    private func makePostPhotoView(imageName: String) -> UIImageView {
+        let view = UIImageView(image: UIImage(named: imageName))
+        view.backgroundColor = UIColor(red: 0.92, green: 0.95, blue: 1.00, alpha: 1)
+        view.contentMode = .scaleAspectFill
         view.layer.cornerRadius = 4
         view.layer.masksToBounds = true
         view.translatesAutoresizingMaskIntoConstraints = false
 
-        let label = UILabel()
-        label.text = "AI"
-        label.font = .systemFont(ofSize: 22, weight: .bold)
-        label.textColor = UIColor.white.withAlphaComponent(0.82)
-        label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(label)
-
         NSLayoutConstraint.activate([
-            view.widthAnchor.constraint(equalToConstant: 83),
-            label.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            label.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+            view.widthAnchor.constraint(equalToConstant: 83)
         ])
 
         return view

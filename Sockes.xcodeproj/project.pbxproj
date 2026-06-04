@@ -148,6 +148,9 @@
 				DEVELOPMENT_TEAM = JPTS6M4T5B;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Sockes/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "The app requires your permission to access the camera, which is used for video chatting with your close friends.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "The app requires your permission to access the microphone, which is used for video chatting and voice communication.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "The app requires your permission to access the photo album, which is used for selecting photos to post on the status or changing the profile picture.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -182,6 +185,9 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Sockes/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "The app requires your permission to access the camera, which is used for video chatting with your close friends.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "The app requires your permission to access the microphone, which is used for video chatting and voice communication.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "The app requires your permission to access the photo album, which is used for selecting photos to post on the status or changing the profile picture.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";

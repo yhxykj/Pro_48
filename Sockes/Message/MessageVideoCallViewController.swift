@@ -24,6 +24,7 @@ final class MessageVideoCallViewController: UIViewController {
     private let friend: MessageFriend
     private let captureQueue = DispatchQueue(label: "com.sockes.messageVideoCall.capture")
     private var captureSession: AVCaptureSession?
+    private var hasCheckedMutualFollow = false
 
     init(friend: MessageFriend) {
         self.friend = friend
@@ -38,7 +39,12 @@ final class MessageVideoCallViewController: UIViewController {
         super.viewDidLoad()
 
         setupContent()
-        requestCallPermissionsAndStartSession()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+
+        checkMutualFollowIfNeeded()
     }
 
     deinit {
@@ -214,6 +220,23 @@ final class MessageVideoCallViewController: UIViewController {
     private func stopCaptureSession() {
         captureQueue.async { [captureSession] in
             captureSession?.stopRunning()
+        }
+    }
+
+    private func checkMutualFollowIfNeeded() {
+        guard !hasCheckedMutualFollow else { return }
+
+        hasCheckedMutualFollow = true
+        guard !ProfileSocialData.isMutualFollow(name: friend.name) else {
+            requestCallPermissionsAndStartSession()
+            return
+        }
+
+        stopCaptureSession()
+        showMutualFollowCard(
+            message: "You can start a video call after you both follow each other."
+        ) { [weak self] in
+            self?.dismiss(animated: true)
         }
     }
 

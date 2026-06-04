@@ -20,8 +20,6 @@ enum ProfileSocialData {
         static let followingPrefix = "profile.social.following"
     }
 
-    static let fans: [ProfileListUser] = []
-
     static var visibleFans: [ProfileListUser] {
         fans.filter { !UserBlockStore.isBlocked(name: $0.name) }
     }
@@ -32,6 +30,11 @@ enum ProfileSocialData {
 
     static func isFollowing(name: String) -> Bool {
         following.contains { $0.name == name }
+    }
+
+    static func isMutualFollow(name: String) -> Bool {
+        visibleFans.contains { $0.name == name } &&
+            visibleFollowing.contains { $0.name == name }
     }
 
     static func follow(_ user: ProfileListUser) {
@@ -79,6 +82,38 @@ enum ProfileSocialData {
     private static var followingStorageKey: String {
         let email = AuthSession.currentEmail ?? "guest"
         return "\(StorageKey.followingPrefix).\(email)"
+    }
+
+    private static var fans: [ProfileListUser] {
+        guard isTestAccount else { return [] }
+
+        return [
+            ProfileListUser(
+                name: "Simo",
+                avatarColor: UIColor(red: 0.76, green: 0.87, blue: 1.00, alpha: 1),
+                avatarImageName: "EmotionSync/PostAvatars/emotion_post_avatar_simo",
+                message: "Love is not a matter of counting the days. It's making the days count.",
+                profileVideoFileName: "profile_male_video_simo"
+            ),
+            ProfileListUser(
+                name: "Arlan",
+                avatarColor: UIColor(red: 0.76, green: 0.87, blue: 1.00, alpha: 1),
+                avatarImageName: "EmotionSync/PostAvatars/emotion_post_avatar_arlan",
+                message: "Don't be discouraged; it's often the last key in the bunch that opens the lock.",
+                profileVideoFileName: "profile_female_video_arlan"
+            ),
+            ProfileListUser(
+                name: "Williams",
+                avatarColor: UIColor(red: 0.76, green: 0.87, blue: 1.00, alpha: 1),
+                avatarImageName: "EmotionSync/PostAvatars/emotion_post_avatar_williams",
+                message: "Life is like a box of chocolates, you never know what you're gonna get.",
+                profileVideoFileName: "profile_male_video_williams"
+            )
+        ]
+    }
+
+    private static var isTestAccount: Bool {
+        AuthSession.currentEmail?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() == "sockes333@gmail.com"
     }
 
 }

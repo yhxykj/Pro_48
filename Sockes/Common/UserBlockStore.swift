@@ -24,7 +24,12 @@ enum UserBlockStore {
             let users = try? JSONDecoder().decode([BlockedUser].self, from: data)
         else { return [] }
 
-        return users
+        let enrichedUsers = users.map(enrichedUser)
+        if enrichedUsers != users {
+            save(enrichedUsers)
+        }
+
+        return enrichedUsers
     }
 
     static func isBlocked(name: String) -> Bool {
@@ -33,7 +38,7 @@ enum UserBlockStore {
 
     static func block(_ user: BlockedUser) {
         var users = blockedUsers.filter { $0.name != user.name }
-        users.append(user)
+        users.append(enrichedUser(user))
         save(users)
     }
 
@@ -45,6 +50,57 @@ enum UserBlockStore {
         guard let data = try? JSONEncoder().encode(users) else { return }
 
         UserDefaults.standard.set(data, forKey: storageKey)
+    }
+
+    private static func enrichedUser(_ user: BlockedUser) -> BlockedUser {
+        BlockedUser(
+            name: user.name,
+            message: user.message,
+            avatarImageName: user.avatarImageName ?? avatarImageName(for: user.name),
+            profileVideoFileName: user.profileVideoFileName ?? profileVideoFileName(for: user.name)
+        )
+    }
+
+    private static func avatarImageName(for name: String) -> String? {
+        switch name {
+        case "Simo":
+            return "EmotionSync/PostAvatars/emotion_post_avatar_simo"
+        case "Arlan":
+            return "EmotionSync/PostAvatars/emotion_post_avatar_arlan"
+        case "Williams":
+            return "EmotionSync/PostAvatars/emotion_post_avatar_williams"
+        case "Perla":
+            return "EmotionSync/PostAvatars/emotion_post_avatar_perla"
+        case "Nue":
+            return "EmotionSync/PostAvatars/emotion_post_avatar_nue"
+        case "Psai":
+            return "EmotionSync/PostAvatars/emotion_post_avatar_psai"
+        case "Kari":
+            return "EmotionSync/PostAvatars/emotion_post_avatar_kari"
+        default:
+            return nil
+        }
+    }
+
+    private static func profileVideoFileName(for name: String) -> String? {
+        switch name {
+        case "Simo":
+            return "profile_male_video_simo"
+        case "Arlan":
+            return "profile_female_video_arlan"
+        case "Williams":
+            return "profile_male_video_williams"
+        case "Perla":
+            return "profile_female_video_perla"
+        case "Nue":
+            return "profile_male_video_nue"
+        case "Psai":
+            return "profile_male_video_psai"
+        case "Kari":
+            return "profile_female_video_kari"
+        default:
+            return nil
+        }
     }
 
 }

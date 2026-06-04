@@ -29,7 +29,7 @@ final class EmotionSyncViewController: UIViewController {
     private let posts: [EmotionPost] = [
         EmotionPost(
             name: "Simo",
-            time: "1 min ago",
+            time: "Jun 04",
             content: "Love is not a matter of counting the days. It's making the days count.",
             avatarImageName: "EmotionSync/PostAvatars/emotion_post_avatar_simo",
             photoImageNames: [
@@ -40,7 +40,7 @@ final class EmotionSyncViewController: UIViewController {
         ),
         EmotionPost(
             name: "Arlan",
-            time: "10 min ago",
+            time: "Jun 04",
             content: "Don't be discouraged; it's often the last key in the bunch that opens the lock.",
             avatarImageName: "EmotionSync/PostAvatars/emotion_post_avatar_arlan",
             photoImageNames: [
@@ -51,7 +51,7 @@ final class EmotionSyncViewController: UIViewController {
         ),
         EmotionPost(
             name: "Williams",
-            time: "18 min ago",
+            time: "Jun 04",
             content: "Life is like a box of chocolates, you never know what you're gonna get.",
             avatarImageName: "EmotionSync/PostAvatars/emotion_post_avatar_williams",
             photoImageNames: [
@@ -62,7 +62,7 @@ final class EmotionSyncViewController: UIViewController {
         ),
         EmotionPost(
             name: "Perla",
-            time: "28 min ago",
+            time: "Jun 03",
             content: "Let the evening light carry away the heavy thoughts for a while.",
             avatarImageName: "EmotionSync/PostAvatars/emotion_post_avatar_perla",
             photoImageNames: [
@@ -72,7 +72,7 @@ final class EmotionSyncViewController: UIViewController {
         ),
         EmotionPost(
             name: "Nue",
-            time: "36 min ago",
+            time: "Jun 03",
             content: "Some quiet moments are also gentle answers from the day.",
             avatarImageName: "EmotionSync/PostAvatars/emotion_post_avatar_nue",
             photoImageNames: [
@@ -82,7 +82,7 @@ final class EmotionSyncViewController: UIViewController {
         ),
         EmotionPost(
             name: "Psai",
-            time: "45 min ago",
+            time: "Jun 02",
             content: "A small flower can still make the whole road feel softer.",
             avatarImageName: "EmotionSync/PostAvatars/emotion_post_avatar_psai",
             photoImageNames: [
@@ -92,7 +92,7 @@ final class EmotionSyncViewController: UIViewController {
         ),
         EmotionPost(
             name: "Kari",
-            time: "52 min ago",
+            time: "Jun 02",
             content: "Rain on the window sounds like the city taking a deep breath.",
             avatarImageName: "EmotionSync/PostAvatars/emotion_post_avatar_kari",
             photoImageNames: [

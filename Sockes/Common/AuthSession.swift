@@ -23,8 +23,9 @@ enum AuthSession {
     }
 
     static func markLoggedIn(email: String) {
+        let normalizedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         UserDefaults.standard.set(true, forKey: Key.isLoggedIn)
-        UserDefaults.standard.set(email, forKey: Key.currentEmail)
+        UserDefaults.standard.set(normalizedEmail, forKey: Key.currentEmail)
     }
 
     static func markLoggedOut() {

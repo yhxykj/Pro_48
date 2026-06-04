@@ -250,6 +250,10 @@ final class MessageChatViewController: UIViewController {
     @objc private func sendMessage() {
         let text = inputTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         guard !text.isEmpty else { return }
+        guard ProfileSocialData.isMutualFollow(name: friend.name) else {
+            showMutualFollowRequiredAlert()
+            return
+        }
 
         inputTextField.text = nil
         appendMessage(ChatMessage(text: text, isMine: true))
@@ -294,6 +298,12 @@ final class MessageChatViewController: UIViewController {
 
         let indexPath = IndexPath(row: messages.count - 1, section: 0)
         tableView.scrollToRow(at: indexPath, at: .bottom, animated: true)
+    }
+
+    private func showMutualFollowRequiredAlert() {
+        showMutualFollowCard(
+            message: "You can send messages after you both follow each other."
+        )
     }
 
     @objc private func keyboardFrameDidChange(_ notification: Notification) {

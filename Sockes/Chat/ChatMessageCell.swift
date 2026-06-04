@@ -11,7 +11,7 @@ final class ChatMessageCell: UITableViewCell {
 
     static let reuseIdentifier = "ChatMessageCell"
 
-    private let avatarView = UIView()
+    private let avatarImageView = UIImageView()
     private let avatarLabel = UILabel()
     private let bubbleLabel = PaddedLabel()
     private var leadingConstraints: [NSLayoutConstraint] = []
@@ -33,14 +33,24 @@ final class ChatMessageCell: UITableViewCell {
         bubbleLabel.backgroundColor = message.isMine
             ? UIColor(red: 0.73, green: 0.84, blue: 1.00, alpha: 1)
             : .white
-        avatarView.backgroundColor = message.isMine
-            ? UIColor(red: 1.00, green: 0.91, blue: 0.68, alpha: 1)
-            : UIColor(red: 0.78, green: 0.88, blue: 1.00, alpha: 1)
-        avatarLabel.text = message.isMine ? "W" : "L"
+        configureAvatar(isMine: message.isMine)
         bubbleWidthConstraint?.constant = message.isMine ? 252 : 256
 
         NSLayoutConstraint.deactivate(leadingConstraints + trailingConstraints)
         NSLayoutConstraint.activate(message.isMine ? trailingConstraints : leadingConstraints)
+    }
+
+    private func configureAvatar(isMine: Bool) {
+        let avatarImage = isMine
+            ? ProfileStore.avatarImage
+            : UIImage(named: "EmotionSync/PostAvatars/emotion_post_avatar_kari")
+
+        avatarImageView.image = avatarImage
+        avatarImageView.backgroundColor = isMine
+            ? UIColor(red: 1.00, green: 0.91, blue: 0.68, alpha: 1)
+            : UIColor(red: 0.78, green: 0.88, blue: 1.00, alpha: 1)
+        avatarLabel.text = isMine ? ProfileStore.avatarInitial() : "L"
+        avatarLabel.isHidden = avatarImage != nil
     }
 
     private func setupCell() {
@@ -48,16 +58,17 @@ final class ChatMessageCell: UITableViewCell {
         contentView.backgroundColor = .clear
         selectionStyle = .none
 
-        avatarView.layer.cornerRadius = 4
-        avatarView.clipsToBounds = true
-        avatarView.translatesAutoresizingMaskIntoConstraints = false
-        contentView.addSubview(avatarView)
+        avatarImageView.contentMode = .scaleAspectFill
+        avatarImageView.layer.cornerRadius = 4
+        avatarImageView.clipsToBounds = true
+        avatarImageView.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(avatarImageView)
 
         avatarLabel.font = .systemFont(ofSize: 12, weight: .bold)
         avatarLabel.textColor = .white
         avatarLabel.textAlignment = .center
         avatarLabel.translatesAutoresizingMaskIntoConstraints = false
-        avatarView.addSubview(avatarLabel)
+        avatarImageView.addSubview(avatarLabel)
 
         bubbleLabel.numberOfLines = 0
         bubbleLabel.font = .systemFont(ofSize: 17, weight: .regular)
@@ -70,22 +81,22 @@ final class ChatMessageCell: UITableViewCell {
         bubbleWidthConstraint?.isActive = true
 
         leadingConstraints = [
-            avatarView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 17),
-            bubbleLabel.leadingAnchor.constraint(equalTo: avatarView.trailingAnchor, constant: 15)
+            avatarImageView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 17),
+            bubbleLabel.leadingAnchor.constraint(equalTo: avatarImageView.trailingAnchor, constant: 15)
         ]
 
         trailingConstraints = [
-            avatarView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -17),
-            bubbleLabel.trailingAnchor.constraint(equalTo: avatarView.leadingAnchor, constant: -15)
+            avatarImageView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -17),
+            bubbleLabel.trailingAnchor.constraint(equalTo: avatarImageView.leadingAnchor, constant: -15)
         ]
 
         NSLayoutConstraint.activate([
-            avatarView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 5),
-            avatarView.widthAnchor.constraint(equalToConstant: 28),
-            avatarView.heightAnchor.constraint(equalToConstant: 28),
+            avatarImageView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 5),
+            avatarImageView.widthAnchor.constraint(equalToConstant: 28),
+            avatarImageView.heightAnchor.constraint(equalToConstant: 28),
 
-            avatarLabel.centerXAnchor.constraint(equalTo: avatarView.centerXAnchor),
-            avatarLabel.centerYAnchor.constraint(equalTo: avatarView.centerYAnchor),
+            avatarLabel.centerXAnchor.constraint(equalTo: avatarImageView.centerXAnchor),
+            avatarLabel.centerYAnchor.constraint(equalTo: avatarImageView.centerYAnchor),
 
             bubbleLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 5),
             bubbleLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -40)
