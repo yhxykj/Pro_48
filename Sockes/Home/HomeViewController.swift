@@ -28,6 +28,10 @@ final class HomeViewController: UIViewController {
         static let unlockedCompanionIDs = "home.unlockedCompanionIDs"
     }
 
+    private enum UnlockRule {
+        static let cost = 50
+    }
+
     private let tableView = UITableView(frame: .zero, style: .plain)
     private var unlockedCompanionIDs: Set<String> = []
     private var pendingChatIndexPath: IndexPath?
@@ -225,9 +229,18 @@ final class HomeViewController: UIViewController {
     }
 
     @objc private func confirmUnlock() {
-        if let pendingChatIndexPath {
-            unlockCompanion(at: pendingChatIndexPath)
+        guard let pendingChatIndexPath else {
+            closeUnlockDialog()
+            return
         }
+
+        guard CoinBalanceStore.spend(UnlockRule.cost) else {
+            closeUnlockDialog()
+            showInsufficientCoinsMessage()
+            return
+        }
+
+        unlockCompanion(at: pendingChatIndexPath)
         closeUnlockDialog()
         showChatPage()
     }
@@ -242,6 +255,16 @@ final class HomeViewController: UIViewController {
         let chatViewController = ChatViewController()
         chatViewController.modalPresentationStyle = .fullScreen
         present(chatViewController, animated: true)
+    }
+
+    private func showInsufficientCoinsMessage() {
+        let alertController = UIAlertController(
+            title: nil,
+            message: "Not enough coins. Please recharge first.",
+            preferredStyle: .alert
+        )
+        alertController.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alertController, animated: true)
     }
 
     private func loadUnlockedCompanions() {

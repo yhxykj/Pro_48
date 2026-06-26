@@ -15,10 +15,13 @@ final class SettingViewController: UIViewController {
     }
 
     private enum AgreementURL {
-        static let privacy = "https://example.com/privacy"
-        static let user = "https://example.com/terms"
-        static let contact = "https://example.com/contact"
-        static let community = "https://example.com/community-guidelines"
+        static let privacy = "https://docs.google.com/document/d/16TibexJK3S2gIBSH2kmmhZJmiFa3g9NidoLbcMbS9uU/edit?usp=sharing"
+        static let user = "https://docs.google.com/document/d/1tWDtDIcVpPiBa4yzI8nUohdnhzvMGbwqJ2pgWG4410E/edit?usp=sharing"
+        static let community = "https://docs.google.com/document/d/15k0CgQCWHEFm2FKcYS6KkBTdkA0YQV8PqyfTygkXtdM/edit?usp=sharing"
+    }
+
+    private enum Contact {
+        static let email = "MootCallsfeedback@gmail.com"
     }
 
     private let items = [
@@ -30,6 +33,7 @@ final class SettingViewController: UIViewController {
         "Log out",
         "Deletion of account"
     ]
+    private weak var contactOverlayView: UIView?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -169,7 +173,7 @@ final class SettingViewController: UIViewController {
     }
 
     @objc private func showContactUsPage() {
-        showWebPage(title: "Contact Us", urlString: AgreementURL.contact)
+        showContactCard()
     }
 
     @objc private func showCommunityGuidelinesPage() {
@@ -185,6 +189,141 @@ final class SettingViewController: UIViewController {
         let viewController = SettingWebViewController(title: title, url: url)
         viewController.modalPresentationStyle = .fullScreen
         present(viewController, animated: true)
+    }
+
+    private func showContactCard() {
+        guard contactOverlayView == nil else { return }
+
+        let overlayView = UIView()
+        overlayView.backgroundColor = UIColor.black.withAlphaComponent(0.34)
+        overlayView.alpha = 0
+        overlayView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(overlayView)
+        contactOverlayView = overlayView
+
+        let cardView = UIView()
+        cardView.backgroundColor = .white
+        cardView.layer.cornerRadius = 18
+        cardView.layer.shadowColor = UIColor.black.cgColor
+        cardView.layer.shadowOpacity = 0.14
+        cardView.layer.shadowRadius = 18
+        cardView.layer.shadowOffset = CGSize(width: 0, height: 10)
+        cardView.alpha = 0
+        cardView.transform = CGAffineTransform(scaleX: 0.94, y: 0.94)
+        cardView.translatesAutoresizingMaskIntoConstraints = false
+        overlayView.addSubview(cardView)
+
+        let titleLabel = UILabel()
+        titleLabel.text = "Contact Us"
+        titleLabel.font = .systemFont(ofSize: 22, weight: .bold)
+        titleLabel.textColor = UIColor(red: 0.10, green: 0.10, blue: 0.10, alpha: 1)
+        titleLabel.textAlignment = .center
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        cardView.addSubview(titleLabel)
+
+        let messageLabel = UILabel()
+        messageLabel.text = "Tap the email to copy it."
+        messageLabel.font = .systemFont(ofSize: 14, weight: .regular)
+        messageLabel.textColor = UIColor(red: 0.48, green: 0.48, blue: 0.50, alpha: 1)
+        messageLabel.textAlignment = .center
+        messageLabel.translatesAutoresizingMaskIntoConstraints = false
+        cardView.addSubview(messageLabel)
+
+        let emailButton = UIButton(type: .custom)
+        emailButton.backgroundColor = UIColor(red: 0.96, green: 0.97, blue: 0.98, alpha: 1)
+        emailButton.layer.cornerRadius = 12
+        emailButton.layer.masksToBounds = true
+        emailButton.setTitle(Contact.email, for: .normal)
+        emailButton.setTitleColor(UIColor(red: 0.08, green: 0.10, blue: 0.08, alpha: 1), for: .normal)
+        emailButton.titleLabel?.font = .systemFont(ofSize: 15, weight: .semibold)
+        emailButton.titleLabel?.adjustsFontSizeToFitWidth = true
+        emailButton.titleLabel?.minimumScaleFactor = 0.72
+        emailButton.contentEdgeInsets = UIEdgeInsets(top: 0, left: 14, bottom: 0, right: 14)
+        emailButton.addTarget(self, action: #selector(copyContactEmail(_:)), for: .touchUpInside)
+        emailButton.translatesAutoresizingMaskIntoConstraints = false
+        cardView.addSubview(emailButton)
+
+        let copyButton = UIButton(type: .custom)
+        copyButton.backgroundColor = UIColor(red: 0.07, green: 0.09, blue: 0.07, alpha: 1)
+        copyButton.layer.cornerRadius = 13
+        copyButton.layer.masksToBounds = true
+        copyButton.setTitle("Copy Email", for: .normal)
+        copyButton.setTitleColor(.white, for: .normal)
+        copyButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .bold)
+        copyButton.addTarget(self, action: #selector(copyContactEmail(_:)), for: .touchUpInside)
+        copyButton.translatesAutoresizingMaskIntoConstraints = false
+        cardView.addSubview(copyButton)
+
+        let closeButton = UIButton(type: .custom)
+        closeButton.setTitle("Cancel", for: .normal)
+        closeButton.setTitleColor(UIColor(red: 0.50, green: 0.50, blue: 0.52, alpha: 1), for: .normal)
+        closeButton.titleLabel?.font = .systemFont(ofSize: 15, weight: .regular)
+        closeButton.addTarget(self, action: #selector(closeContactCard), for: .touchUpInside)
+        closeButton.translatesAutoresizingMaskIntoConstraints = false
+        cardView.addSubview(closeButton)
+
+        NSLayoutConstraint.activate([
+            overlayView.topAnchor.constraint(equalTo: view.topAnchor),
+            overlayView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            overlayView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            overlayView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+
+            cardView.centerXAnchor.constraint(equalTo: overlayView.centerXAnchor),
+            cardView.centerYAnchor.constraint(equalTo: overlayView.centerYAnchor),
+            cardView.leadingAnchor.constraint(equalTo: overlayView.leadingAnchor, constant: 34),
+            cardView.trailingAnchor.constraint(equalTo: overlayView.trailingAnchor, constant: -34),
+
+            titleLabel.topAnchor.constraint(equalTo: cardView.topAnchor, constant: 30),
+            titleLabel.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 24),
+            titleLabel.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -24),
+
+            messageLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 10),
+            messageLabel.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
+            messageLabel.trailingAnchor.constraint(equalTo: titleLabel.trailingAnchor),
+
+            emailButton.topAnchor.constraint(equalTo: messageLabel.bottomAnchor, constant: 22),
+            emailButton.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 26),
+            emailButton.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -26),
+            emailButton.heightAnchor.constraint(equalToConstant: 48),
+
+            copyButton.topAnchor.constraint(equalTo: emailButton.bottomAnchor, constant: 18),
+            copyButton.leadingAnchor.constraint(equalTo: emailButton.leadingAnchor),
+            copyButton.trailingAnchor.constraint(equalTo: emailButton.trailingAnchor),
+            copyButton.heightAnchor.constraint(equalToConstant: 46),
+
+            closeButton.topAnchor.constraint(equalTo: copyButton.bottomAnchor, constant: 8),
+            closeButton.leadingAnchor.constraint(equalTo: copyButton.leadingAnchor),
+            closeButton.trailingAnchor.constraint(equalTo: copyButton.trailingAnchor),
+            closeButton.heightAnchor.constraint(equalToConstant: 42),
+            closeButton.bottomAnchor.constraint(equalTo: cardView.bottomAnchor, constant: -20)
+        ])
+
+        UIView.animate(withDuration: 0.2, delay: 0, options: [.curveEaseOut]) {
+            overlayView.alpha = 1
+            cardView.alpha = 1
+            cardView.transform = .identity
+        }
+    }
+
+    @objc private func copyContactEmail(_ sender: UIButton) {
+        UIPasteboard.general.string = Contact.email
+
+        let originalTitle = sender.currentTitle
+        sender.setTitle("Copied", for: .normal)
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            sender.setTitle(originalTitle, for: .normal)
+        }
+    }
+
+    @objc private func closeContactCard() {
+        guard let contactOverlayView else { return }
+
+        UIView.animate(withDuration: 0.16) {
+            contactOverlayView.alpha = 0
+        } completion: { _ in
+            contactOverlayView.removeFromSuperview()
+        }
     }
 
     @objc private func logOut() {

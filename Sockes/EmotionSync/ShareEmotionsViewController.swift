@@ -17,13 +17,19 @@ final class ShareEmotionsViewController: UIViewController {
         static let addPhotoIcon = "EmotionSync/ShareEmotions/share_emotions_add_photo_icon"
     }
 
+    private enum ShareRule {
+        static let cost = 99
+    }
+
     private let feelingsTextView = UITextView()
     private let placeholderLabel = UILabel()
     private let selectedPhotoImageView = UIImageView()
     private weak var addPhotoView: UIView?
     private weak var closePhotoView: UIView?
     private weak var photoOptionsOverlayView: UIView?
+    private weak var insufficientCoinsOverlayView: UIView?
     private var selectedPhoto: UIImage?
+    private var isSharing = false
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -221,7 +227,7 @@ final class ShareEmotionsViewController: UIViewController {
         coinView.translatesAutoresizingMaskIntoConstraints = false
 
         let coinCountLabel = UILabel()
-        coinCountLabel.text = "99"
+        coinCountLabel.text = "\(ShareRule.cost)"
         coinCountLabel.textColor = .white
         coinCountLabel.font = .systemFont(ofSize: 14, weight: .semibold)
         coinCountLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -432,6 +438,8 @@ final class ShareEmotionsViewController: UIViewController {
     }
 
     @objc private func shareEmotion() {
+        guard !isSharing else { return }
+
         view.endEditing(true)
 
         let feelings = feelingsTextView.text.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -445,7 +453,149 @@ final class ShareEmotionsViewController: UIViewController {
             return
         }
 
+        isSharing = true
+        guard CoinBalanceStore.spend(ShareRule.cost) else {
+            isSharing = false
+            showInsufficientCoinsCard()
+            return
+        }
+
         showShareSuccessAndReturn()
+    }
+
+    private func showInsufficientCoinsCard() {
+        guard insufficientCoinsOverlayView == nil else { return }
+
+        let overlayView = UIView()
+        overlayView.backgroundColor = UIColor.black.withAlphaComponent(0.36)
+        overlayView.alpha = 0
+        overlayView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(overlayView)
+        insufficientCoinsOverlayView = overlayView
+
+        let cardView = UIView()
+        cardView.backgroundColor = .white
+        cardView.layer.cornerRadius = 18
+        cardView.layer.masksToBounds = false
+        cardView.layer.shadowColor = UIColor.black.cgColor
+        cardView.layer.shadowOpacity = 0.16
+        cardView.layer.shadowRadius = 20
+        cardView.layer.shadowOffset = CGSize(width: 0, height: 10)
+        cardView.alpha = 0
+        cardView.transform = CGAffineTransform(scaleX: 0.94, y: 0.94)
+        cardView.translatesAutoresizingMaskIntoConstraints = false
+        overlayView.addSubview(cardView)
+
+        let coinView = makeCoinView()
+        coinView.translatesAutoresizingMaskIntoConstraints = false
+        cardView.addSubview(coinView)
+
+        let titleLabel = UILabel()
+        titleLabel.text = "Not enough coins"
+        titleLabel.font = .systemFont(ofSize: 21, weight: .bold)
+        titleLabel.textColor = UIColor(red: 0.10, green: 0.10, blue: 0.10, alpha: 1)
+        titleLabel.textAlignment = .center
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        cardView.addSubview(titleLabel)
+
+        let messageLabel = UILabel()
+        messageLabel.text = "Sharing costs \(ShareRule.cost) coins."
+        messageLabel.font = .systemFont(ofSize: 14, weight: .regular)
+        messageLabel.textColor = UIColor(red: 0.46, green: 0.46, blue: 0.48, alpha: 1)
+        messageLabel.textAlignment = .center
+        messageLabel.translatesAutoresizingMaskIntoConstraints = false
+        cardView.addSubview(messageLabel)
+
+        let balanceLabel = UILabel()
+        balanceLabel.text = "Current balance: \(CoinBalanceStore.balance)"
+        balanceLabel.font = .systemFont(ofSize: 14, weight: .semibold)
+        balanceLabel.textColor = UIColor(red: 0.96, green: 0.48, blue: 0.04, alpha: 1)
+        balanceLabel.textAlignment = .center
+        balanceLabel.translatesAutoresizingMaskIntoConstraints = false
+        cardView.addSubview(balanceLabel)
+
+        let rechargeButton = UIButton(type: .custom)
+        rechargeButton.backgroundColor = UIColor(red: 0.07, green: 0.09, blue: 0.07, alpha: 1)
+        rechargeButton.layer.cornerRadius = 13
+        rechargeButton.layer.masksToBounds = true
+        rechargeButton.setTitle("Recharge", for: .normal)
+        rechargeButton.setTitleColor(.white, for: .normal)
+        rechargeButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .bold)
+        rechargeButton.addTarget(self, action: #selector(showRechargePageFromInsufficientCoins), for: .touchUpInside)
+        rechargeButton.translatesAutoresizingMaskIntoConstraints = false
+        cardView.addSubview(rechargeButton)
+
+        let closeButton = UIButton(type: .custom)
+        closeButton.setTitle("Cancel", for: .normal)
+        closeButton.setTitleColor(UIColor(red: 0.48, green: 0.48, blue: 0.50, alpha: 1), for: .normal)
+        closeButton.titleLabel?.font = .systemFont(ofSize: 15, weight: .regular)
+        closeButton.addTarget(self, action: #selector(closeInsufficientCoinsCard), for: .touchUpInside)
+        closeButton.translatesAutoresizingMaskIntoConstraints = false
+        cardView.addSubview(closeButton)
+
+        NSLayoutConstraint.activate([
+            overlayView.topAnchor.constraint(equalTo: view.topAnchor),
+            overlayView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            overlayView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            overlayView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+
+            cardView.centerXAnchor.constraint(equalTo: overlayView.centerXAnchor),
+            cardView.centerYAnchor.constraint(equalTo: overlayView.centerYAnchor),
+            cardView.leadingAnchor.constraint(equalTo: overlayView.leadingAnchor, constant: 38),
+            cardView.trailingAnchor.constraint(equalTo: overlayView.trailingAnchor, constant: -38),
+
+            coinView.topAnchor.constraint(equalTo: cardView.topAnchor, constant: 28),
+            coinView.centerXAnchor.constraint(equalTo: cardView.centerXAnchor),
+            coinView.widthAnchor.constraint(equalToConstant: 42),
+            coinView.heightAnchor.constraint(equalToConstant: 42),
+
+            titleLabel.topAnchor.constraint(equalTo: coinView.bottomAnchor, constant: 18),
+            titleLabel.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 24),
+            titleLabel.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -24),
+
+            messageLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 10),
+            messageLabel.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
+            messageLabel.trailingAnchor.constraint(equalTo: titleLabel.trailingAnchor),
+
+            balanceLabel.topAnchor.constraint(equalTo: messageLabel.bottomAnchor, constant: 8),
+            balanceLabel.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
+            balanceLabel.trailingAnchor.constraint(equalTo: titleLabel.trailingAnchor),
+
+            rechargeButton.topAnchor.constraint(equalTo: balanceLabel.bottomAnchor, constant: 24),
+            rechargeButton.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 32),
+            rechargeButton.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -32),
+            rechargeButton.heightAnchor.constraint(equalToConstant: 46),
+
+            closeButton.topAnchor.constraint(equalTo: rechargeButton.bottomAnchor, constant: 7),
+            closeButton.leadingAnchor.constraint(equalTo: rechargeButton.leadingAnchor),
+            closeButton.trailingAnchor.constraint(equalTo: rechargeButton.trailingAnchor),
+            closeButton.heightAnchor.constraint(equalToConstant: 42),
+            closeButton.bottomAnchor.constraint(equalTo: cardView.bottomAnchor, constant: -20)
+        ])
+
+        UIView.animate(withDuration: 0.2, delay: 0, options: [.curveEaseOut]) {
+            overlayView.alpha = 1
+            cardView.alpha = 1
+            cardView.transform = .identity
+        }
+    }
+
+    @objc private func closeInsufficientCoinsCard() {
+        guard let insufficientCoinsOverlayView else { return }
+
+        UIView.animate(withDuration: 0.16) {
+            insufficientCoinsOverlayView.alpha = 0
+        } completion: { _ in
+            insufficientCoinsOverlayView.removeFromSuperview()
+        }
+    }
+
+    @objc private func showRechargePageFromInsufficientCoins() {
+        closeInsufficientCoinsCard()
+
+        let viewController = RechargeViewController()
+        viewController.modalPresentationStyle = .fullScreen
+        present(viewController, animated: true)
     }
 
     private func showMessage(_ message: String) {

@@ -11,11 +11,15 @@ import UIKit
 final class RechargeViewController: UIViewController {
 
     private enum ProductIdentifier {
-        static let coin99 = "new_1000"
-    }
-
-    private enum StorageKey {
-        static let coinBalance = "profile.coinBalance"
+        static let coin63700 = "sjhdbcrodrkogoyx"
+        static let coin49400 = "qjbdjfhbksduwerg"
+        static let coin29400 = "swutqcmefssyysqm"
+        static let coin16800 = "iwejhjjdbfhqrfnd"
+        static let coin10800 = "kaihwzstfvrvljvg"
+        static let coin5150 = "fzogbndzawjjdfga"
+        static let coin2450 = "smcmexdueucqopyy"
+        static let coin800 = "wvdawjqhitlwnnpd"
+        static let coin400 = "mneozskrxnvtguds"
     }
 
     private enum PurchaseVerificationError: Error {
@@ -26,13 +30,12 @@ final class RechargeViewController: UIViewController {
         static let backIcon = "Common/common_back_icon"
         static let topBackground = "EmotionSync/ShareEmotions/share_emotions_background"
         static let coinHero = "Profile/Recharge/recharge_coin_hero"
-        static let coinPackageCard = "Profile/Recharge/recharge_coin_package_card"
     }
 
     private struct CoinPackage {
         let productID: String
+        let priceText: String
         let coins: Int
-        let imageName: String
     }
 
     private let balanceLabel = UILabel()
@@ -60,23 +63,26 @@ final class RechargeViewController: UIViewController {
         return collectionView
     }()
 
-    private let coinPackages: [CoinPackage] = Array(
-        repeating: CoinPackage(
-            productID: ProductIdentifier.coin99,
-            coins: 99,
-            imageName: Asset.coinPackageCard
-        ),
-        count: 9
-    )
+    private let coinPackages: [CoinPackage] = [
+        CoinPackage(productID: ProductIdentifier.coin63700, priceText: "$99.99", coins: 63700),
+        CoinPackage(productID: ProductIdentifier.coin49400, priceText: "$79.99", coins: 49400),
+        CoinPackage(productID: ProductIdentifier.coin29400, priceText: "$49.99", coins: 29400),
+        CoinPackage(productID: ProductIdentifier.coin16800, priceText: "$29.99", coins: 16800),
+        CoinPackage(productID: ProductIdentifier.coin10800, priceText: "$19.99", coins: 10800),
+        CoinPackage(productID: ProductIdentifier.coin5150, priceText: "$9.99", coins: 5150),
+        CoinPackage(productID: ProductIdentifier.coin2450, priceText: "$4.99", coins: 2450),
+        CoinPackage(productID: ProductIdentifier.coin800, priceText: "$1.99", coins: 800),
+        CoinPackage(productID: ProductIdentifier.coin400, priceText: "$0.99", coins: 400)
+    ]
     private var coinProducts: [String: Product] = [:]
-    private var coinBalance = 0
+    private var coinBalance = CoinBalanceStore.balance
     private var isPurchasing = false
     private var transactionListenerTask: Task<Void, Never>?
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        coinBalance = UserDefaults.standard.integer(forKey: StorageKey.coinBalance)
+        coinBalance = CoinBalanceStore.balance
         setupContent()
         transactionListenerTask = listenForTransactions()
         Task {
@@ -408,8 +414,7 @@ final class RechargeViewController: UIViewController {
     }
 
     private func finishConsumablePurchase(coins: Int) {
-        coinBalance += coins
-        UserDefaults.standard.set(coinBalance, forKey: StorageKey.coinBalance)
+        coinBalance = CoinBalanceStore.add(coins)
         balanceLabel.text = "\(coinBalance)"
 
         UIView.animate(
@@ -451,7 +456,10 @@ extension RechargeViewController: UICollectionViewDataSource, UICollectionViewDe
         }
 
         let coinPackage = coinPackages[indexPath.item]
-        cell.configure(imageName: coinPackage.imageName)
+        cell.configure(
+            coins: coinPackage.coins,
+            priceText: coinPackage.priceText
+        )
         return cell
     }
 
