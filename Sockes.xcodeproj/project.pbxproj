@@ -6,25 +6,46 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		42A286C63312FC1CF51F993F /* Pods_Sockes.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CFC24174325F9F69295CCC3B /* Pods_Sockes.framework */; };
+		FYK8E65710X8Z49387FO170V /* SocSessionController.swift in Sources */ = {isa = PBXBuildFile; fileRef = KFCEE331J2G247E9Q208913P /* SocSessionController.swift */; };
+		GW1W4994I4K261O9G6RL8D58 /* SocMoodNewsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = VC50FHBYVN34638NP912925H /* SocMoodNewsController.swift */; };
+		HG4196P24R12K08822COF782 /* SocCleanerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SZ18261C1UHT1770291S5288 /* SocCleanerView.swift */; };
+		HJP5T5368C996CT5TFNY113Z /* SocCenterObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC0011491T1E3G7375095096 /* SocCenterObject.swift */; };
+		VQ202S021076B6216W8E380D /* SocSessionAuthController.swift in Sources */ = {isa = PBXBuildFile; fileRef = VKY790L81MLEPC7Z0621KI58 /* SocSessionAuthController.swift */; };
+		VX27SB15V4LK2225M5M62227 /* SocScreenController.swift in Sources */ = {isa = PBXBuildFile; fileRef = QR809S241SM58VF20T236914 /* SocScreenController.swift */; };
+		XF5682X88Y53V857K4X267W4 /* SocDetailSceneObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = DV81657XU91B7A2C1X1L3240 /* SocDetailSceneObject.swift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
-		72221D662FCD314000C80F9D /* Sockes.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Sockes.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		9F0D51EC8FCFBDE886522EB4 /* Pods-Sockes.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Sockes.release.xcconfig"; path = "Target Support Files/Pods-Sockes/Pods-Sockes.release.xcconfig"; sourceTree = "<group>"; };
+		C21FE8184E8356923DF90B22 /* Pods-Sockes.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Sockes.debug.xcconfig"; path = "Target Support Files/Pods-Sockes/Pods-Sockes.debug.xcconfig"; sourceTree = "<group>"; };
+		CFC24174325F9F69295CCC3B /* Pods_Sockes.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Sockes.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		DV81657XU91B7A2C1X1L3240 /* SocDetailSceneObject.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.swift; path = SocDetailSceneObject.swift; sourceTree = "<group>"; };
+		EC0011491T1E3G7375095096 /* SocCenterObject.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.swift; path = SocCenterObject.swift; sourceTree = "<group>"; };
+		G4739R688R1W34N6AQ0569N1 /* Sockes.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Sockes.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		KFCEE331J2G247E9Q208913P /* SocSessionController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.swift; path = SocSessionController.swift; sourceTree = "<group>"; };
+		QR809S241SM58VF20T236914 /* SocScreenController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.swift; path = SocScreenController.swift; sourceTree = "<group>"; };
+		SZ18261C1UHT1770291S5288 /* SocCleanerView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.swift; path = SocCleanerView.swift; sourceTree = "<group>"; };
+		VC50FHBYVN34638NP912925H /* SocMoodNewsController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.swift; path = SocMoodNewsController.swift; sourceTree = "<group>"; };
+		VKY790L81MLEPC7Z0621KI58 /* SocSessionAuthController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.swift; path = SocSessionAuthController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		72221D782FCD314300C80F9D /* Exceptions for "Sockes" folder in "Sockes" target */ = {
+		833B9V8Q20845Z564RR6LRB3 /* Exceptions for "Sockes" folder in "Sockes" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
-			target = 72221D652FCD314000C80F9D /* Sockes */;
+			target = H5J58665PU635D5213F3G926 /* Sockes */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		72221D682FCD314000C80F9D /* Sockes */ = {
+		53712IM0008D3807S670802Y /* Sockes */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				72221D782FCD314300C80F9D /* Exceptions for "Sockes" folder in "Sockes" target */,
+				833B9V8Q20845Z564RR6LRB3 /* Exceptions for "Sockes" folder in "Sockes" target */,
 			);
 			path = Sockes;
 			sourceTree = "<group>";
@@ -32,93 +53,127 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		72221D632FCD314000C80F9D /* Frameworks */ = {
+		491IIW8795B4ENIUH8C44455 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				42A286C63312FC1CF51F993F /* Pods_Sockes.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		72221D5D2FCD314000C80F9D = {
+		6DBE9CCBD7B219C73D7A8FDF /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				72221D682FCD314000C80F9D /* Sockes */,
-				72221D672FCD314000C80F9D /* Products */,
+				CFC24174325F9F69295CCC3B /* Pods_Sockes.framework */,
 			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		72221D672FCD314000C80F9D /* Products */ = {
+		CD3C311E74A4775F16C30D32 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				72221D662FCD314000C80F9D /* Sockes.app */,
+				C21FE8184E8356923DF90B22 /* Pods-Sockes.debug.xcconfig */,
+				9F0D51EC8FCFBDE886522EB4 /* Pods-Sockes.release.xcconfig */,
+			);
+			path = Pods;
+			sourceTree = "<group>";
+		};
+		FCIEJV331R220592161103F8 /* prompeg */ = {
+			isa = PBXGroup;
+			children = (
+				QR809S241SM58VF20T236914 /* SocScreenController.swift */,
+				SZ18261C1UHT1770291S5288 /* SocCleanerView.swift */,
+				DV81657XU91B7A2C1X1L3240 /* SocDetailSceneObject.swift */,
+				KFCEE331J2G247E9Q208913P /* SocSessionController.swift */,
+				EC0011491T1E3G7375095096 /* SocCenterObject.swift */,
+				VC50FHBYVN34638NP912925H /* SocMoodNewsController.swift */,
+				VKY790L81MLEPC7Z0621KI58 /* SocSessionAuthController.swift */,
+			);
+			path = prompeg;
+			sourceTree = "<group>";
+		};
+		H3060ZR6715P98S591U32U16 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				G4739R688R1W34N6AQ0569N1 /* Sockes.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		J114303691304B68897ZR2T3 = {
+			isa = PBXGroup;
+			children = (
+				53712IM0008D3807S670802Y /* Sockes */,
+				H3060ZR6715P98S591U32U16 /* Products */,
+				FCIEJV331R220592161103F8 /* prompeg */,
+				CD3C311E74A4775F16C30D32 /* Pods */,
+				6DBE9CCBD7B219C73D7A8FDF /* Frameworks */,
+			);
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		72221D652FCD314000C80F9D /* Sockes */ = {
+		H5J58665PU635D5213F3G926 /* Sockes */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 72221D792FCD314300C80F9D /* Build configuration list for PBXNativeTarget "Sockes" */;
+			buildConfigurationList = 315ZSD97WJ4A81447F9C685J /* Build configuration list for PBXNativeTarget "Sockes" */;
 			buildPhases = (
-				72221D622FCD314000C80F9D /* Sources */,
-				72221D632FCD314000C80F9D /* Frameworks */,
-				72221D642FCD314000C80F9D /* Resources */,
+				C273C8476A8503DE6C858E9D /* [CP] Check Pods Manifest.lock */,
+				12A42700D6115XC0TUC89351 /* Sources */,
+				491IIW8795B4ENIUH8C44455 /* Frameworks */,
+				97AI178B5114S3T78Z039QR0 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				72221D682FCD314000C80F9D /* Sockes */,
+				53712IM0008D3807S670802Y /* Sockes */,
 			);
 			name = Sockes;
-			packageProductDependencies = (
-			);
 			productName = Sockes;
-			productReference = 72221D662FCD314000C80F9D /* Sockes.app */;
+			productReference = G4739R688R1W34N6AQ0569N1 /* Sockes.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		72221D5E2FCD314000C80F9D /* Project object */ = {
+		L82LN01D972AT0423U81O18I /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 2600;
 				LastUpgradeCheck = 2600;
 				TargetAttributes = {
-					72221D652FCD314000C80F9D = {
+					H5J58665PU635D5213F3G926 = {
 						CreatedOnToolsVersion = 26.0.1;
 					};
 				};
 			};
-			buildConfigurationList = 72221D612FCD314000C80F9D /* Build configuration list for PBXProject "Sockes" */;
+			buildConfigurationList = K52W94V4S8W92O0J14733286 /* Build configuration list for PBXProject "Sockes" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
 				Base,
 			);
-			mainGroup = 72221D5D2FCD314000C80F9D;
+			mainGroup = J114303691304B68897ZR2T3;
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
-			productRefGroup = 72221D672FCD314000C80F9D /* Products */;
+			productRefGroup = H3060ZR6715P98S591U32U16 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				72221D652FCD314000C80F9D /* Sockes */,
+				H5J58665PU635D5213F3G926 /* Sockes */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		72221D642FCD314000C80F9D /* Resources */ = {
+		97AI178B5114S3T78Z039QR0 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -127,19 +182,52 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		C273C8476A8503DE6C858E9D /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-Sockes-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
-		72221D622FCD314000C80F9D /* Sources */ = {
+		12A42700D6115XC0TUC89351 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				VX27SB15V4LK2225M5M62227 /* SocScreenController.swift in Sources */,
+				HG4196P24R12K08822COF782 /* SocCleanerView.swift in Sources */,
+				XF5682X88Y53V857K4X267W4 /* SocDetailSceneObject.swift in Sources */,
+				FYK8E65710X8Z49387FO170V /* SocSessionController.swift in Sources */,
+				HJP5T5368C996CT5TFNY113Z /* SocCenterObject.swift in Sources */,
+				GW1W4994I4K261O9G6RL8D58 /* SocMoodNewsController.swift in Sources */,
+				VQ202S021076B6216W8E380D /* SocSessionAuthController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-		72221D7A2FCD314300C80F9D /* Debug */ = {
+		4M3Q0O51F470D3412PT293F0 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = C21FE8184E8356923DF90B22 /* Pods-Sockes.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -148,13 +236,14 @@
 				DEVELOPMENT_TEAM = JPTS6M4T5B;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Sockes/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = MootCalls;
 				INFOPLIST_KEY_NSCameraUsageDescription = "The app requires your permission to access the camera, which is used for video chatting with your close friends.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "The app requires your permission to access the microphone, which is used for video chatting and voice communication.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "The app requires your permission to access the photo album, which is used for selecting photos to post on the status or changing the profile picture.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -176,30 +265,34 @@
 			};
 			name = Debug;
 		};
-		72221D7B2FCD314300C80F9D /* Release */ = {
+		62G36318C6OT2X8A99136526 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9F0D51EC8FCFBDE886522EB4 /* Pods-Sockes.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Sockes/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = MootCalls;
 				INFOPLIST_KEY_NSCameraUsageDescription = "The app requires your permission to access the camera, which is used for video chatting with your close friends.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "The app requires your permission to access the microphone, which is used for video chatting and voice communication.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "The app requires your permission to access the photo album, which is used for selecting photos to post on the status or changing the profile picture.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = sockes.Sockes;
+				PRODUCT_BUNDLE_IDENTIFIER = com.qingxu.lookier;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -213,7 +306,7 @@
 			};
 			name = Release;
 		};
-		72221D7C2FCD314300C80F9D /* Debug */ = {
+		EIF46RK8919M1B684BP452I4 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -276,7 +369,7 @@
 			};
 			name = Debug;
 		};
-		72221D7D2FCD314300C80F9D /* Release */ = {
+		IK92242T849837N8KCNU8SGT /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -335,25 +428,25 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		72221D612FCD314000C80F9D /* Build configuration list for PBXProject "Sockes" */ = {
+		315ZSD97WJ4A81447F9C685J /* Build configuration list for PBXNativeTarget "Sockes" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				72221D7C2FCD314300C80F9D /* Debug */,
-				72221D7D2FCD314300C80F9D /* Release */,
+				4M3Q0O51F470D3412PT293F0 /* Debug */,
+				62G36318C6OT2X8A99136526 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		72221D792FCD314300C80F9D /* Build configuration list for PBXNativeTarget "Sockes" */ = {
+		K52W94V4S8W92O0J14733286 /* Build configuration list for PBXProject "Sockes" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				72221D7A2FCD314300C80F9D /* Debug */,
-				72221D7B2FCD314300C80F9D /* Release */,
+				EIF46RK8919M1B684BP452I4 /* Debug */,
+				IK92242T849837N8KCNU8SGT /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
-	rootObject = 72221D5E2FCD314000C80F9D /* Project object */;
+	rootObject = L82LN01D972AT0423U81O18I /* Project object */;
 }
