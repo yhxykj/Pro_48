@@ -1,6 +1,6 @@
 
 import Foundation
-
+import Efokawaharete
 import UIKit
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
@@ -255,6 +255,10 @@ _ = starsGetwintimeofday
         window.rootViewController = SocLoginCache.isLoggedIn ? SocCleanerController() : SocPackageSceneController()
         window.makeKeyAndVisible()
         self.window = window
+        
+        Erohelijolup.shared.setup()
+        
+        
     }
 
 @discardableResult
